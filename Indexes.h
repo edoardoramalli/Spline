@@ -581,21 +581,7 @@ void Indexes::calculateScores() {
         newindexBestSplineExp = indexBestSplineExp;
 
 
-    indexBestSplineExp = newindexBestSplineExp;
-
-    cout<<"\n SSE0 = ";
-    cout<< SSE_0;
-    cout<<"\n SSE1 = ";
-    cout<< SSE_1;
-    cout<<"\n SSE2 = ";
-    cout<< SSE_2 << endl;
-    
-    cout<< "\n indexBestSplineExp = "<< indexBestSplineExp << "\n";
-
-    cout<< "\n ySpl_1 size = "<< ySpl_1.size()<< "\n";
-
-    
-    
+    indexBestSplineExp = newindexBestSplineExp;    
 }
 
 

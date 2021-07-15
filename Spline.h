@@ -312,8 +312,6 @@ void Spline::solve(const vector<double>& Abscissae,
 
     this->findMaximaBetweenExtremes();
 
-    cout<<"\n dof of the spline: "<<K<<"\n";
-
 }
 
 
