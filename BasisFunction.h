@@ -70,11 +70,6 @@ private:
                            vector<vector<double>>& basisSum);
 
     // FOR TESTING PURPOSES ONLY:
-    /* Saves the data for creating the graph of the basis function to a .txt
-    file, and creates the .R script to create the graph */
-    void printBasisR(int derivativeOrder);
-
-    // FOR TESTING PURPOSES ONLY:
     /* Calculates the value of the second derivative of the basis function at
     position x on the x-axis */
     double D2(double x);
@@ -362,51 +357,6 @@ void BasisFunction::sumBasisFunctions(vector<vector<double>> basisAlpha,
     }
 
 }
-
-
-
-void BasisFunction::printBasisR(int derivativeOrder) {
-
-    int numberPoints = 10000;
-
-    double distance = (knotsAll.back()-knotsAll[0]) / (double)(numberPoints-1);
-
-    // Saves the data for the plot to a .txt file
-
-    string fileName = "DatiPlotR.txt";
-    string fileNameWithPath = "./" + fileName;
-
-    const char* fileNameWithPathChar = fileNameWithPath.c_str();
-    ofstream file(fileNameWithPathChar);
-
-    file << "x\ty" << endl;
-    for (int i=0; i<numberPoints; ++i) {
-        file << knotsAll[0]+(double)i*distance << "\t";
-        if (derivativeOrder == 0)
-            file << this->D0(knotsAll[0]+(double)i*distance) << endl;
-        else if (derivativeOrder == 1)
-            file << this->D1(knotsAll[0]+(double)i*distance) << endl;
-        else if (derivativeOrder == 2)
-            file << this->D2(knotsAll[0]+(double)i*distance) << endl;
-    }
-    file.close();
-
-    // Writes the .R script to create the graph
-
-    string scriptName = "Script.R";
-
-    const char* scriptNameAndPathChar = scriptName.c_str();
-    ofstream script(scriptNameAndPathChar);
-
-    script << "Test = read.table(\"" << fileName
-           << "\", sep=\"\\t\", header=TRUE)" << endl
-           << "plot(Test[,1],Test[,2], cex=0.01, col=3)";
-
-    script.close();
-
-}
-
-
 
 double BasisFunction::D2(double x) {
 

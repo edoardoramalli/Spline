@@ -5,60 +5,17 @@ public:
     /* Name of the _exp.txt and _mod.txt files with the data for the splines */
     string fileName;
 
-    /* Number of models to be compared with the experimental data */
-    int numberOfModels;
-
-    /* Names of the models */
-    vector<string> modelNames;
-
-    /* Scores, before the shift. scores[i] contains the data relative to the
-    comparison of modelNames[i] and the experimental data. scores[i] is equal to
-    -1 in case it is not possible to calculate score i, or in case the
-    calculated score is nan */
-    vector<double> scores;
-
-    /* Scores, after the shift. scores_shift[i] contains the data relative to
-    the comparison of modelNames[i] and the experimental data. scores_shift[i]
-    is equal to -1 in case it is not possible to calculate score i, or in case
-    the calculated score is nan */
-    vector<double> scores_shift;
-
-    /* Standard deviations of the scores, before the shift. stdDev[i] contains
-    the data relative to the comparison of modelNames[i] and the experimental
-    data. stdDev[i] is equal to -1 in case it is not possible to calculate the
-    corresponding score, or it is nan */
-    vector<double> stdDev;
-
-    /* Standard deviations of the scores, after the shift. stdDev_shift[i]
-    contains the data relative to the comparison of modelNames[i] and the
-    experimental data. stdDev_shift[i] is equal to -1 in case it is not possible
-    to calculate the corresponding score, or it is nan */
-    vector<double> stdDev_shift;
-
-    /* Individual indexes for each variation of the experimental data obtained
-    with the bootstrapping procedure. allIndexes[i][j][k]: i: variations of the
-    experimental data; j: models; k: d0L2, d1L2, d0Pe, d1Pe, shift (or shifts if
-    all different) */
-    vector<vector<vector<double>>> allIndexes;
-
     ////////////////////////////////////////////////////////////////////////////
 
     /* Executes all the operations for the comparison of the experimental data
     with the models */
     void solve(const string& folderPath,
                const string& folderName,
-               const string& fileName,
-               bool calculateShift);
+               const string& fileName);
 
     ////////////////////////////////////////////////////////////////////////////
 
 private:
-
-    /* Equivalent of 'scores' for every bootstrap variation */
-    vector<vector<double>> bootstrapScores;
-
-    /* Equivalent of scores_shift for every bootstrap variation */
-    vector<vector<double>> bootstrapScores_shift;
 
     /* x-coordinates and y-coordinates of the experimental data and the models.
     inputData[0] and inputData[1] contain, respectively, the x-coordinates and
@@ -70,13 +27,6 @@ private:
     /* Splines for the experimental data */
     vector<Spline> splinesExp;
 
-    /* Splines for the models. splinesMod[i] contains the spline for
-    modelNames[i] */
-    vector<Spline> splinesMod;
-
-    /* Splines for the models, before being extended */
-    vector<Spline> splinesMod_original;
-
     /* Path to the folder containing the input data */
     string folderPath;
 
@@ -85,9 +35,6 @@ private:
 
     /* Relative errors for each experimental data point */
     vector<double> relativeErrors;
-
-    /* Specifies whether to calculate the indexes for the shifted splines */
-    bool calculateShift;
 
     /* Amounts to be added to the abscissae of the models to find the shifted
     abscissae. shiftAmounts[i][j] refers to splinesExp[i] and modelNames[j] */
@@ -164,68 +111,8 @@ private:
     */
     int newindexBestSplineExp;
 
-    /* Values of the d0L2, d1L2, d0Pe and d1Pe indexes, in this order, obtained
-    before any shift. indexes[i][j] refers to splinesExp[i] and contains the
-    data relative to the comparison of modelNames[j] and the experimental data.
-    Is equal to -1 in case it is not possible to calculate an index */
-    vector<vector<vector<double>>> indexes;
-
-    /* Values of the d0L2_shift, d1L2_shift, d0Pe_shift, d1Pe_shift indexes, in
-    this order, corresponding to their optimal values found while shifting.
-    indexes_shift[i][j] refers to splinesExp[i] and contains the data relative
-    to the comparison of modelNames[j] and the experimental data. Is equal to -1
-    in case it is not possible to calculate an index */
-    vector<vector<vector<double>>> indexes_shift;
-
-    /* Values of the shift indexes, corresponding to the normalized shift
-    amounts which maximize the means of d0L2, d1L2, d0Pe and d1Pe for each
-    model. shifts[i][j] refers to splinesExp[i] and contains the data relative
-    to the comparison of modelNames[j] and the experimental data. Is equal to -1
-    in case it is not possible to calculate a shift */
-    vector<vector<double>> shifts;
-
-    /* Values of the shift indexes, corresponding to the normalized shift
-    amounts which maximise each of d0L2, d1L2, d0Pe and d1Pe for each model.
-    shifts[i][j] refers to splinesExp[i] and contains the data relative to the
-    comparison of modelNames[j] and the experimental data. Is equal to -1 in
-    case it is not possible to calculate a shift */
-    vector<vector<vector<double>>> shifts_allDifferent;
-
-    /* Norm of the experimental data, calculated between the extremes of the
-    experimental data */
-    double normD0Exp;
-
-    /* Norm of the first derivative of the experimental data, calculated between
-    the extremes of the experimental data */
-    double normD1Exp;
-
-    /* Norm of a model, calculated between the extremes of the experimental data
-    */
-    double normD0Mod;
-
-    /* Norm of the first derivative of a model, calculated between the extremes
-    of the experimental data */
-    double normD1Mod;
-
-    /* Specifies whether for a model it is possible to calculate the indexes for
-    the shifted model */
-    vector<vector<bool>> possibleToCalculateShifts;
-
-    /* Integral of the absolute value of the first derivative of the
-    experimental data */
-    double integralOfAbsoluteValueD1Exp;
-
-    /* Index of the bootstrap variation currently being considered */
-    int bootstrapIndex;
-
     /* Used by calculateShiftAmounts */
     double maxExtrapolatedLength;
-
-    /* Used by calculateShiftAmounts */
-    double shiftAroundMaximum;
-
-    /* Used by calculateShiftAmounts */
-    double distanceBetweenShiftedPoints;
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -244,8 +131,8 @@ private:
     /* Calculates the indexes for each model */
     void calculateIndexes();
 
-    /* Calculates the scores from the indexes */
-    void calculateScores();
+    /* Select the best spline for the experimental data among the three calculated*/
+    void calculateIndeBestSplineExp();
 
     /* Saves the data necessary to plot the splines to .txt files */
     void saveGraphData();
@@ -265,12 +152,11 @@ private:
 
 
 
-void Indexes::solve(const string& FolderPath,const string& FolderName,const string& FileName,bool CalculateShift) {
+void Indexes::solve(const string& FolderPath,const string& FolderName,const string& FileName) {
 
     folderPath = FolderPath;
     folderName = FolderName;
     fileName = FileName;
-    calculateShift = CalculateShift;
 
     // Processes the data in the input files
     this->readData();
@@ -287,7 +173,7 @@ void Indexes::solve(const string& FolderPath,const string& FolderName,const stri
     }
 
     // Calculates the scores from the indexes
-    this->calculateScores();
+    this->calculateIndeBestSplineExp();
 
     
 
@@ -511,7 +397,7 @@ void Indexes::calculateIndexes() {
 
 
 
-void Indexes::calculateScores() {
+void Indexes::calculateIndeBestSplineExp() {
 
     // Selects the best spline of splinesExp
 

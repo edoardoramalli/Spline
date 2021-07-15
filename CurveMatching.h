@@ -240,8 +240,7 @@ void CurveMatching::newThread(int whichFolder, int whichFile) {
 
     indexes[whichFolder][whichFile].solve(folderPathList[whichFolder],
                                           folderList[whichFolder],
-                                          nameLists[whichFolder][whichFile],
-                                          calculateShift[whichFolder]);
+                                          nameLists[whichFolder][whichFile]);
 
 }
 
