@@ -26,40 +26,20 @@ second derivative, it must also be sufficiently distant from the two surrounding
 minima. The minimum admissible distance is determined using this variable */
 double fractionOfOrdinateRangeForMaximumIdentification = 0.025;
 
-/* Fraction of the range of the experimental data on the y-axis for determining
-whether a model can be considered a flat line with ordinate = 0 when compared to
-the experimental data. This is useful for identifying situations that are
-problematic for the calculation of the similarity indexes */
-double fractionOfExpHeightForZeroLineIdentification = 0.02;
-
-/* Minimum range on the x-axis of the models, before the addition of segments at
-the extremes, required for comparison with the experimental data, expressed as a
-fraction of the range of the experimental data on the x-axis */
-double fractionOfExpRangeForModelExtrapolation = 0.5;
-
-/* Fraction of the range of the experimental data on the x-axis used to
-calculate the minimum shift possible */
-double fractionOfExpRangeForMinShift = 0.005;
-
-/* Fraction of the range of the experimental data on the x-axis used to shift
-the models around the position of perfect alignment between their well-defined
-maximum and the well-defined maximum of the experimental data */
-double fractionOfExpRangeForShiftAroundMaximum = 0.05;
-
 /* Specifies whether negative segments on the y-axis are admissible for the
 splines or whether they should be replaced with straight lines with ordinate 0
 */
 bool possibleNegativeOrdinates = false;
 
-/* Number of plausible versions of the experimental data generated during the
+/* DA TOGLIERE Number of plausible versions of the experimental data generated during the
 bootstrap procedure. numberOfBootstrapVariations = 1 : no bootstrap */
 int numberOfBootstrapVariations = 20;
 
-/* Specifies whether the program should attempt to line up the maxima of
+/* DA TOGLIERE Specifies whether the program should attempt to line up the maxima of
 experimental data and models during the shift procedure */
 bool lineUpMaxima = true;
 
-/* Specifies whether the program should use the sum of the four dissimilarity
+/* DA TOGLIERE Specifies whether the program should use the sum of the four dissimilarity
 indexes when calculating the shift, thus finding a single shift amount, or
 whether the program should consider each of the four indexes separately, thus
 obtaining four different values for the shift */
@@ -72,14 +52,6 @@ int numberOfTrapezoids = 99;
 errors are not provided along with the experimental data */
 double defaultRelativeError = 0.1;
 
-/* Specifies whether the individual indexes (d0L2, d1L2, d0Pe, d1Pe, shift)
-should be saved to .csv files */
-bool saveIndexesToCsv = false;
-
-/* Specifies whether to create the graphs with the points and the knots used for
-the fitting, and the resulting spline */
-bool graphsFittingD0 = true;
-
 /* Specifies whether to create the graphs comparing the spline for the
 experimental data with the splines for the models */
 bool graphsD0 = true;
@@ -89,15 +61,6 @@ spline for the experimental data with the first derivatives of the splines for
 the models */
 bool graphsD1 = false;
 
-/* Specifies whether to create the graphs comparing the spline for the
-experimental data with the splines for the shifted models */
-bool graphsD0Shift = true;
-
-/* Specifies whether to create the graphs comparing the first derivative of the
-spline for the experimental data with the first derivatives of the splines for
-the shifted models */
-bool graphsD1Shift = false;
-
 /* Per stampare tutte le spline non solo la migliore */
 bool allSplineExp = false;
 
@@ -106,6 +69,9 @@ bool knotsToSave = false;
 
 /* Per stampare i nodi scelti per il calcolo della spline */
 bool saveExpData = false;
+
+/* Stampa di un file txt con un recap sulle spline */
+bool coseUtili = false;
 
 /* Specifies whether at least one kind of graph is to be created */
 bool graphs = true;

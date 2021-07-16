@@ -36,70 +36,6 @@ private:
     /* Relative errors for each experimental data point */
     vector<double> relativeErrors;
 
-    /* Amounts to be added to the abscissae of the models to find the shifted
-    abscissae. shiftAmounts[i][j] refers to splinesExp[i] and modelNames[j] */
-    vector<vector<vector<double>>> shiftAmounts;
-
-    /* Positions in shiftAmounts, indicating the shifts that maximise the mean
-    of d0L2, d1L2, d0Pe and d1Pe for the models. maxIndexes[i][j] refers to
-    shiftAmounts[i][j] */
-    vector<vector<int>> maxIndexes;
-
-    /* Index in the splinesMod vector of the model being calculated */
-    int indexOfModelBeingCalculated;
-
-    /* Height of the trapezoids used used during integration, divided by 2 */
-    double halfHeight;
-
-    /* Powers of the abscissae of the sides of the trapezoids used for the
-    numerical calculation of the indexes, distributed evenly between the
-    extremes of the experimental data */
-    vector<vector<double>> xPowers;
-
-    /* Ordinates of the experimental data spline, with yD0[i] corresponding to
-    xPowers[i][1] */
-    vector<double> yD0;
-
-    /* Ordinates of the first derivative of the experimental data spline, with
-    yD1[i] corresponding to xPowers[i][1] */
-    vector<double> yD1;
-
-    /* Scores without shifts. Sorted from lowest to highest. Is equal to -1 in
-    case it is not possible to calculate a score */
-    vector<double> scoresSorted;
-
-    /* Standard deviations without shifts. Sorted from lowest to highest. Is
-    equal to -1 in case it is not possible to calculate a score */
-    vector<double> stdDevSorted;
-
-    /* Model names, sorted as the elements of scoresSorted */
-    vector<string> modelNamesSorted;
-
-    /* Line types in the .R graphs, sorted as the elements of scoresSorted */
-    vector<int> scoresSortedLineTypes;
-
-    /* Color indexes in the .R graphs, sorted as the elements of scoresSorted */
-    vector<int> scoresSortedColorIndexes;
-
-    /* Scores with shifts. Sorted from lowest to highest. Is equal to -1 in case
-    it is not possible to calculate a score */
-    vector<double> scoresSorted_shift;
-
-    /* Standard deviations with shifts. Sorted from lowest to highest. Is equal
-    to -1 in case it is not possible to calculate a score */
-    vector<double> stdDevSorted_shift;
-
-    /* Model names, sorted as the elements of scoresSorted_shift */
-    vector<string> modelNamesSorted_shift;
-
-    /* Line types in the .R graphs, sorted as the elements of scoresSorted_shift
-    */
-    vector<int> scoresSortedLineType_shift;
-
-    /* Color indexes in the .R graphs, sorted as the elements of
-    scoresSorted_shift */
-    vector<int> scoresSortedColorIndexes_shift;
-
     /* Index in the splinesExp vector of the spline being considered */
     int splineExpIndex;
 
@@ -107,13 +43,17 @@ private:
     */
     int indexBestSplineExp;
 
-    /* Index in the splinesExp vector of the best fit of the experimental data
-    */
+    /* Index in the splinesExp vector of the best fit of the experimental data*/
     int newindexBestSplineExp;
 
-    /* Used by calculateShiftAmounts */
-    double maxExtrapolatedLength;
+    /**/
+    double SSE_0;
+    /**/
+    double SSE_1;
+    /**/
+    double SSE_2;
 
+    
     ////////////////////////////////////////////////////////////////////////////
 
     /* Reads the data relative to the experiment (x, y, relative errors) and the
@@ -368,8 +308,6 @@ void Indexes::calculateSplines() {
         splinesExp[2].removeAsymptotes();
     }
 
-
-
 }
 
 
@@ -378,20 +316,12 @@ void Indexes::calculateIndexes() {
 
     int i = splineExpIndex;
 
-    double minLengthInCommon = splinesExp[i].xRange*fractionOfExpRangeForModelExtrapolation ;
-
-    
-    // DA VEDERE
-    //maxExtrapolatedLength = splinesExp[i].xRange - minLengthInCommon
-
     // Normalizes the spline coefficients of the experimental data and of the
     // first derivative of the experimental data
     splinesExp[i].normalizeCoefficients(
                                     -splinesExp[i].yD0Min,
                                     splinesExp[i].yD0Max-splinesExp[i].yD0Min,
                                     splinesExp[i].yD1MaxAbs);
-
-    
 
 }
 
@@ -416,11 +346,11 @@ void Indexes::calculateIndeBestSplineExp() {
     for (int i=0; i<inputData[0].size();i++)
         ySpl_2.push_back(splinesExp[2].D0(inputData[0][i]));
     
-    double SSE_0 = Stat_SSE(inputData[1],ySpl_0);
+    SSE_0 = Stat_SSE(inputData[1],ySpl_0);
 
-    double SSE_1 = Stat_SSE(inputData[1],ySpl_1);
+    SSE_1 = Stat_SSE(inputData[1],ySpl_1);
 
-    double SSE_2 = Stat_SSE(inputData[1],ySpl_2);
+    SSE_2 = Stat_SSE(inputData[1],ySpl_2);
 
     if (SSE_0<=SSE_1 && SSE_0<=SSE_2){
         indexBestSplineExp = 0;
@@ -482,20 +412,12 @@ void Indexes::saveGraphData() {
     auto x = vector<double>(graphPoints);
     auto x_1 = vector<double>(graphPoints);
     auto x_2 = vector<double>(graphPoints);
-    vector<double> xShift;
-    vector<vector<double>> xShiftPowers;
-    if (graphsD0Shift == true || graphsD1Shift == true) {
-        xShift = vector<double>(graphPoints);
-        xShiftPowers = vector<vector<double>>(graphPoints,vector<double>(m,1));
-    }
 
-    vector<double> y_D0, y_D1, y_D0_Shift, y_D1_Shift, nodi;
+    vector<double> y_D0, y_D1, nodi;
     vector<double> y_D0_1, nodi_1;
     vector<double> y_D0_2, nodi_2;
     if (graphsD0 == true) y_D0 = vector<double>(graphPoints);
     if (graphsD1 == true) y_D1 = vector<double>(graphPoints);
-    if (graphsD0Shift == true) y_D0_Shift = vector<double>(graphPoints);
-    if (graphsD1Shift == true) y_D1_Shift = vector<double>(graphPoints);
     if (knotsToSave == true) nodi = vector<double>(graphPoints);
     if (allSplineExp == true) y_D0_1 = vector<double>(graphPoints), nodi_1 = vector<double>(graphPoints), 
                                 y_D0_2 = vector<double>(graphPoints), nodi_2 = vector<double>(graphPoints);
@@ -523,21 +445,6 @@ void Indexes::saveGraphData() {
             for (int b=0; b<graphPoints; ++b)
                 y_D1[b] = splinesExp[j].D1(x[b]);
 
-        if (graphsD0Shift == true) {
-            if (graphsD0 == true)
-                y_D0_Shift = y_D0;
-            else
-                for (int b=0; b<graphPoints; ++b)
-                    y_D0_Shift[b] = splinesExp[j].D0(x[b]);
-        }
-
-        if (graphsD1Shift == true) {
-            if (graphsD1 == true)
-                y_D1_Shift = y_D1;
-            else
-                for (int b=0; b<graphPoints; ++b)
-                    y_D1_Shift[b] = splinesExp[j].D1(x[b]);
-        }
         if (knotsToSave == true)
             for (int b=0; b<splinesExp[j].knots.size(); ++b)
                 nodi[b] = splinesExp[j].knots[b];
@@ -637,38 +544,6 @@ void Indexes::saveGraphData() {
 
         }
 
-        if (graphsD0Shift == true) {
-
-            string pathAndNameString = pathAndPartialName + "Exp_D0_shift.txt";
-
-            const char* pathAndName = pathAndNameString.c_str();
-            ofstream script;
-            script.open(pathAndName,std::ios::app);
-
-            script << "x_Exp\t" << fileName << "_Exp\n";
-            for (int b=0; b<graphPoints; ++b)
-                script << x[b] << "\t" << y_D0_Shift[b] << "\n";
-
-            script.close();
-
-        }
-
-        if (graphsD1Shift == true) {
-
-            string pathAndNameString = pathAndPartialName + "Exp_D1_shift.txt";
-
-            const char* pathAndName = pathAndNameString.c_str();
-            ofstream script;
-            script.open(pathAndName,std::ios::app);
-
-            script << "x_Exp\t" << fileName << "_Exp\n";
-            for (int b=0; b<graphPoints; ++b)
-                script << x[b] << "\t" << y_D1_Shift[b] << "\n";
-
-            script.close();
-
-        }
-
         if (knotsToSave == true) {
 
             string pathAndNameString = pathAndPartialName + "knots.txt";
@@ -741,6 +616,22 @@ void Indexes::saveGraphData() {
             script.close();
         }
 
+        if (coseUtili == true){
+
+            string pathAndNameString = pathAndPartialName + "recap.txt";
+
+            const char* pathAndName = pathAndNameString.c_str();
+            ofstream script;
+            script.open(pathAndName,std::ios::app);
+
+            script << "SSE\t" << "num of abs sep\t" << "DoF\n" ;
+            script << SSE_0 << "\t" <<  "0\t" << "Not impl\n";
+            script << SSE_1 << "\t" <<  "2\t" << "Not impl\n";
+            script << SSE_2 << "\t" <<  "5\t" << "Not impl\n";
+
+            script.close();
+        }
+
     }
 
 }
@@ -759,5 +650,6 @@ double Indexes::Stat_SSE(vector <double> b, vector<double> c){
     for(int i=0; i<SSE.size(); i++)
         s = s + SSE[i];
 
-    return s;   
+    return s;  
+
 }
