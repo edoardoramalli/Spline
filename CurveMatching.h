@@ -45,10 +45,6 @@ private:
     /* Obtains one row of nameLists, referring to a specific folder path */
     void nameList(const string& folderPath, vector<string>& nameList);
 
-    /* Reads the options specific to a folder, for every folder, and saves them
-    in calculateShift */
-    void readFolderOptions();
-
     /* Erases the contents of a folder, given its path */
     void emptyFolder(const string& folderPath);
 
@@ -94,10 +90,6 @@ void CurveMatching::run() {
     nameLists = vector<vector<string>>(folderList.size());
     for (int a=0; a<folderList.size(); ++a)
         nameList(folderPathList[a],nameLists[a]);
-
-    // Reads the options specific to a folder, for every folder, and saves them
-    // in calculateShift
-    readFolderOptions();
 
     // Generates the Pascal's triangle
     pascalsTriangle = vector<vector<double>>(m,vector<double>(1,1));
@@ -179,42 +171,6 @@ void CurveMatching::nameList(const string& folderPath,
     closedir(pdir);
 
 }
-
-
-
-void CurveMatching::readFolderOptions() {
-
-    calculateShift = vector<bool>(folderList.size(),true);
-
-    for (int a=0; a<folderList.size(); ++a) {
-
-        string line;
-        string element;
-        ifstream myfile(("./Input/"+folderList[a]+".txt").c_str());
-        while (getline(myfile,line)) {
-            int indexColumn = 0;
-            int doNotCalculate = 0;
-            stringstream lineString(line);
-            while (lineString >> element) {
-                if (element == "shift") doNotCalculate = 1;
-                if (indexColumn == 1) {
-                    if (doNotCalculate != 0) {
-                        if (element == "No" || element == "no" ||
-                            element == "NO") {
-                            if (doNotCalculate == 1) calculateShift[a] = false;
-                        }
-                    }
-                }
-                ++indexColumn;
-            }
-        }
-        myfile.close();
-
-    }
-
-}
-
-
 
 void CurveMatching::emptyFolder(const string& folderPath) {
 
