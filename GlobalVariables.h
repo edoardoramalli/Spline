@@ -73,6 +73,18 @@ bool saveExpData = false;
 /* Stampa di un file txt con un recap sulle spline */
 bool coseUtili = false;
 
+/**/
+bool criterionSSE = false;
+
+/**/
+bool criterionAIC = true;
+
+/**/
+bool criterionBIC = false;
+
+/**/
+bool removeAsymptotes = true;
+
 /* Specifies whether at least one kind of graph is to be created */
 bool graphs = true;
 

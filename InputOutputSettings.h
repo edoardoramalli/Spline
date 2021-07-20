@@ -12,6 +12,10 @@ void readProgramSettings() {
     string knotsToSaveString;
     string saveExpDataString;
     string coseUtiliString;
+    string criterionSSEString;
+    string criterionAICString;
+    string criterionBICString;
+    string removeAsymptotesString;
 
     string line;
     ifstream myfile("./Settings.txt");
@@ -55,6 +59,14 @@ void readProgramSettings() {
             iss >> saveExpDataString;
         else if (s == "@coseUtili:")
         	iss >> coseUtiliString;
+        else if (s == "@criterionSSE:")
+            iss >> criterionSSEString;
+        else if (s == "@criterionAIC:")
+            iss >> criterionAICString;
+        else if (s == "@criterionBIC:")
+            iss >> criterionBICString;
+        else if (s == "@removeAsymptotes:")
+            iss >> removeAsymptotesString;
 
     }
     myfile.close();
@@ -74,6 +86,10 @@ void readProgramSettings() {
     if (knotsToSaveString == "yes") knotsToSave = true;
     if (saveExpDataString == "yes") saveExpData = true;
     if (coseUtiliString == "yes") coseUtili = true;
+    if (criterionSSEString == "yes") criterionSSE = true, criterionAIC = false, criterionBIC = false;
+    if (criterionAICString == "yes") criterionSSE = false, criterionAIC = true, criterionBIC = false;
+    if (criterionBICString == "yes") criterionSSE = false, criterionAIC = false, criterionBIC = true;
+    if (removeAsymptotesString == "no") removeAsymptotes = false;
 
     if (graphsD0 == false)
         if (graphsD1 == false)
@@ -117,6 +133,12 @@ void displaySettings() {
         s += "Saving the data for every spline for the experimental data \n";
     if (coseUtili == true)
         s += "Generation of the recap file \n";
+    if (criterionSSE == true)
+        s += "The choice of the best spline for the experimental data is done minimizing the SSE \n";
+    if (criterionBIC == true)
+        s += "The choice of the best spline for the experimental data is done minimizing the BIC \n";
+    if (removeAsymptotes == false)
+        s += "Not removing the left and right asymptotes for the spline";
 
     if (s != "")
         cout << "\nNon-default settings:\n" << s;

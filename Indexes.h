@@ -43,17 +43,32 @@ private:
     */
     int indexBestSplineExp;
 
-    /* Index in the splinesExp vector of the best fit of the experimental data*/
-    int newindexBestSplineExp;
+    /* Vector containing the Summed Squared errors of the spline for the experimental data*/
+    vector<double> SSE;
 
     /**/
-    double SSE_0;
-    /**/
-    double SSE_1;
-    /**/
-    double SSE_2;
+    vector<double> ll;
 
+    /**/
+    vector<vector<double>> information;
+
+    /**/
+    vector<int> numOfParam;
+
+    /**/
+    vector<double> AIC;
     
+    /**/
+    vector<double> AICc;
+
+    /**/
+    vector<double> BIC;
+
+    /**/
+    vector<double> k; 
+
+    /**/
+    vector<double> ratioLK;
     ////////////////////////////////////////////////////////////////////////////
 
     /* Reads the data relative to the experiment (x, y, relative errors) and the
@@ -82,6 +97,16 @@ private:
 
     double Stat_SSE(vector <double> b, vector<double> c);
 
+    /* Function to calculate the likelihood function under the hypothesis of normal distributed
+        errors*/
+    vector<double> logLikeliHood(double n, vector<double> residuals);
+
+    /**/
+    vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<int> numOfParam, vector<double> residuals);
+
+    /**/
+    int positionOfMinimum(vector<double> a);
+
 };
 
 
@@ -101,7 +126,6 @@ void Indexes::solve(const string& FolderPath,const string& FolderName,const stri
     // Processes the data in the input files
     this->readData();
 
-
     // Calculates the splines for the experimental data
     this->calculateSplines();
 
@@ -114,8 +138,6 @@ void Indexes::solve(const string& FolderPath,const string& FolderName,const stri
 
     // Calculates the scores from the indexes
     this->calculateIndeBestSplineExp();
-
-    
 
     // Saves the data necessary to plot the splines to .txt files.
     // Used to interface with Alice's work
@@ -296,16 +318,22 @@ void Indexes::calculateSplines() {
         splinesExp = vector<Spline>(3);
 
     splinesExp[0].solve(inputData[0],inputData[1],0,0);
-    splinesExp[0].removeAsymptotes();
+    if (removeAsymptotes == true){
+        splinesExp[0].removeAsymptotes();
+    }
 
     if (splinesExp.size() > 1) {
         splinesExp[1].solve(inputData[0],inputData[1],0,2);
-        splinesExp[1].removeAsymptotes();
+        if (removeAsymptotes == true){
+            splinesExp[1].removeAsymptotes();
+        }
     }
 
     if (splinesExp.size() > 2) {
         splinesExp[2].solve(inputData[0],inputData[1],0,5);
-        splinesExp[2].removeAsymptotes();
+        if (removeAsymptotes == true){
+            splinesExp[2].removeAsymptotes();
+        }
     }
 
 }
@@ -346,58 +374,52 @@ void Indexes::calculateIndeBestSplineExp() {
     for (int i=0; i<inputData[0].size();i++)
         ySpl_2.push_back(splinesExp[2].D0(inputData[0][i]));
     
-    SSE_0 = Stat_SSE(inputData[1],ySpl_0);
+    SSE.push_back(Stat_SSE(inputData[1],ySpl_0));
+    SSE.push_back(Stat_SSE(inputData[1],ySpl_1));
+    SSE.push_back(Stat_SSE(inputData[1],ySpl_2));
 
-    SSE_1 = Stat_SSE(inputData[1],ySpl_1);
+    double numOfObs = inputData[0].size();
 
-    SSE_2 = Stat_SSE(inputData[1],ySpl_2);
+    ll = logLikeliHood(numOfObs,SSE);
 
-    if (SSE_0<=SSE_1 && SSE_0<=SSE_2){
-        indexBestSplineExp = 0;
-    }
-    if (SSE_1<=SSE_0 && SSE_1<=SSE_2){
-        indexBestSplineExp = 1;
-    }
-    if (SSE_2<=SSE_0 && SSE_2<=SSE_1){
-        indexBestSplineExp = 2;
-    }
-      
-    if(inputData[0].back() != splinesExp[indexBestSplineExp].knots.back() || inputData[0][0] != splinesExp[indexBestSplineExp].knots[0]){
+    for(int i=0;i<splinesExp.size();i++)
+        numOfParam.push_back(splinesExp[i].K);
 
-        if(indexBestSplineExp == 0){
-            if (SSE_1<=SSE_2){
-                newindexBestSplineExp = 1;
-            }
-            
-            if (SSE_2<=SSE_0){
-                newindexBestSplineExp = 2;
-            }
-        }
-        if(indexBestSplineExp == 1){
-            if (SSE_0<=SSE_2){
-                newindexBestSplineExp = 0;
-            }
-            
-            if (SSE_2<=SSE_0 ){
-                newindexBestSplineExp = 2;
-            }
-        }
-        if(indexBestSplineExp == 2){
-            if (SSE_0<=SSE_1){
-                newindexBestSplineExp = 0;
-            }
-            
-            if (SSE_1<=SSE_0 ){
-                newindexBestSplineExp = 1;
-            }
-        }
+    information = informationCriterion(ll,numOfObs,numOfParam,SSE);
+
+    AIC = information[0];
+    AICc = information[1];
+    BIC = information [2];
+    k = information [3];
+
+    for (int i=0; i<k.size();i++)
+        ratioLK.push_back(k[i]/numOfObs);
+
+    if (criterionSSE == true){
+
+        indexBestSplineExp = positionOfMinimum(SSE);
+    
     }
 
-    else 
-        newindexBestSplineExp = indexBestSplineExp;
+    if (criterionAIC == true){   
 
+        // for (int i = 0; i<AIC.size()-2; i++){
+        //     if (AIC[i]<=AIC[i+1] && AIC[i]<=AIC[i+2])
+        //         indexBestSplineExp = i;
+        //     else if (AIC[i+1]<=AIC[i] && AIC[i+1]<=AIC[i+2])
+        //         indexBestSplineExp = i+1;
+        //     else if (AIC[i+2]<=AIC[i] && AIC[i+2]<=AIC[i+1])
+        //         indexBestSplineExp = i+2;
+        // }    
 
-    indexBestSplineExp = newindexBestSplineExp;    
+        indexBestSplineExp = positionOfMinimum(AIC);
+    }
+
+    if (criterionBIC == true){
+        
+        indexBestSplineExp = positionOfMinimum(BIC);
+    }
+
 }
 
 
@@ -624,10 +646,10 @@ void Indexes::saveGraphData() {
             ofstream script;
             script.open(pathAndName,std::ios::app);
 
-            script << "SSE\t" << "num of abs sep\t" << "DoF\n" ;
-            script << SSE_0 << "\t" <<  "0\t" << "Not impl\n";
-            script << SSE_1 << "\t" <<  "2\t" << "Not impl\n";
-            script << SSE_2 << "\t" <<  "5\t" << "Not impl\n";
+            script <<  "DoF"<< setw(10) << "index"<< setw(10) << "SSE" << setw(15)<< "AIC" << setw(14)<< "AICc" << setw(10)<< "BIC\n" ;
+            script << splinesExp[j].K << setw(7) << j << setw(22) << SSE[j]<< setw(12) << AIC[j] << setw(12) << AICc[j] << setw(10) << BIC[j]<<"\n";
+            script << splinesExp[p].K << setw(7) << p << setw(22) << SSE[p]<< setw(12) << AIC[p] << setw(12) << AICc[p] << setw(10) << BIC[p]<<"\n";
+            script << splinesExp[q].K << setw(7) << q << setw(22) << SSE[q]<< setw(12) << AIC[q] << setw(12) << AICc[q] << setw(10) << BIC[q]<<"\n";
 
             script.close();
         }
@@ -635,7 +657,6 @@ void Indexes::saveGraphData() {
     }
 
 }
-
 
 double Indexes::Stat_SSE(vector <double> b, vector<double> c){
 
@@ -652,4 +673,62 @@ double Indexes::Stat_SSE(vector <double> b, vector<double> c){
 
     return s;  
 
+}
+
+vector<double> Indexes::logLikeliHood(double n, vector<double> residuals){
+
+    vector<double> ll;
+
+    for(int i=0; i<SSE.size(); i++)
+        ll.push_back(n * log(residuals[i] / n));
+
+    return ll; 
+
+}
+
+vector<vector<double>> Indexes::informationCriterion(vector<double> ll, double n, vector<int> numOfParam,
+                                                         vector<double> residuals){
+    
+    vector<vector<double>> information ;
+    vector<double> AIC;
+    vector<double> correctionAIC;
+    vector<double> AICc;
+    vector<double> BIC;
+    vector<double> k; 
+
+    for(int i=0;i<numOfParam.size();i++)
+        k.push_back(2*(numOfParam[i]+1)+1);
+
+    for(int i=0; i<ll.size();i++){
+        
+        AIC.push_back(2*k[i]+ll[i]);
+        correctionAIC.push_back(2*k[i]*(k[i]+1)/(n-k[i]-1));
+        BIC.push_back(ll[i]+k[i]*log(n));
+    }
+    for (int i = 0; i<correctionAIC.size(); i++)
+        AICc.push_back(AIC[i]+correctionAIC[i]);
+
+    information.push_back(AIC);
+    information.push_back(AICc);
+    information.push_back(BIC);
+    information.push_back(k);
+    
+    return information;
+        
+}
+
+int Indexes::positionOfMinimum(vector<double> a){
+
+    int index;
+
+    for (int i = 0; i<AIC.size()-2; i++){
+        if (a[i]<=a[i+1] && a[i]<=a[i+2])
+            index = i;
+        else if (a[i+1]<=a[i] && a[i+1]<=a[i+2])
+            index = i+1;
+        else if (a[i+2]<=a[i] && a[i+2]<=a[i+1])
+            index = i+2;
+    }
+
+    return index;
 }

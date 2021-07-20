@@ -115,6 +115,9 @@ public:
     the extremes, but would have had two had additional data been provided */
     bool hasFirstOfTwoMaxima;
 
+    /* Degrees of freedom of the spline */
+    int K;
+
     ////////////////////////////////////////////////////////////////////////////
 
     /* Calculates the spline */
@@ -179,9 +182,6 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 private:
-
-    /* Degrees of freedom of the spline */
-    int K;
 
     /* Degrees of freedom of the spline minus 1 */
     int G;
