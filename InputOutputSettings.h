@@ -2,8 +2,6 @@
 void readProgramSettings() {
 
     string possibleNegativeOrdinatesString;
-    string lineUpMaximaString = "yes";
-    string useSumOfIndexesForAlignmentString = "yes";
     string graphsD0String;
     string graphsD1String;
     // aggiunte da Timoteo Dinelli per confrontare le diverse spline generate e salvare 
@@ -12,9 +10,7 @@ void readProgramSettings() {
     string knotsToSaveString;
     string saveExpDataString;
     string coseUtiliString;
-    string criterionSSEString;
-    string criterionAICString;
-    string criterionBICString;
+    string criterionString;
     string removeAsymptotesString;
 
     string line;
@@ -35,12 +31,6 @@ void readProgramSettings() {
             iss >> fractionOfOrdinateRangeForMaximumIdentification;
         else if (s == "@possibleNegativeOrdinates:")
             iss >> possibleNegativeOrdinatesString;
-        else if (s == "@numberOfBootstrapVariations:")
-            iss >> numberOfBootstrapVariations;
-        else if (s == "@lineUpMaxima:")
-            iss >> lineUpMaximaString;
-        else if (s == "@useSumOfIndexesForAlignment:")
-            iss >> useSumOfIndexesForAlignmentString;
         else if (s == "@numberOfTrapezoids:")
             iss >> numberOfTrapezoids;
         else if (s == "@defaultRelativeError:")
@@ -59,26 +49,17 @@ void readProgramSettings() {
             iss >> saveExpDataString;
         else if (s == "@coseUtili:")
         	iss >> coseUtiliString;
-        else if (s == "@criterionSSE:")
-            iss >> criterionSSEString;
-        else if (s == "@criterionAIC:")
-            iss >> criterionAICString;
-        else if (s == "@criterionBIC:")
-            iss >> criterionBICString;
+        else if (s == "@criterion:")
+            iss >> criterionString;
         else if (s == "@removeAsymptotes:")
             iss >> removeAsymptotesString;
-
+        else if (s == "@numberOfRatiolkForAICcUse:")
+            iss >> numberOfRatiolkForAICcUse;
     }
     myfile.close();
 
     if (possibleNegativeOrdinatesString == "yes")
         possibleNegativeOrdinates = true;
-
-    if (lineUpMaximaString != "yes")
-        lineUpMaxima = false;
-
-    if (useSumOfIndexesForAlignmentString != "yes")
-        useSumOfIndexesForAlignment = false;
 
     if (graphsD0String != "yes") graphsD0 = false;
     if (graphsD1String == "yes") graphsD1 = true;
@@ -86,9 +67,9 @@ void readProgramSettings() {
     if (knotsToSaveString == "yes") knotsToSave = true;
     if (saveExpDataString == "yes") saveExpData = true;
     if (coseUtiliString == "yes") coseUtili = true;
-    if (criterionSSEString == "yes") criterionSSE = true, criterionAIC = false, criterionBIC = false;
-    if (criterionAICString == "yes") criterionSSE = false, criterionAIC = true, criterionBIC = false;
-    if (criterionBICString == "yes") criterionSSE = false, criterionAIC = false, criterionBIC = true;
+    if (criterionString == "AIC") criterion = "AIC";
+    if (criterionString == "SSE") criterion = "SSE";
+    if (criterionString == "BIC") criterion = "BIC";
     if (removeAsymptotesString == "no") removeAsymptotes = false;
 
     if (graphsD0 == false)
@@ -108,6 +89,8 @@ void displaySettings() {
         s += "lambdaSearchInterval: "+to_string(lambdaSearchInterval)+"\n";
     if (numberOfStepsLambda != 13)
         s += "numberOfStepsLambda: "+to_string(numberOfStepsLambda)+"\n";
+    if (numberOfRatiolkForAICcUse != 40)
+        s += "numberOfRatiolkForAICcUse: "+to_string(numberOfRatiolkForAICcUse)+"\n";
     if (fractionOfOrdinateRangeForAsymptoteIdentification != 0.005)
         s += "fractionOfOrdinateRangeForAsymptoteIdentification: "+
              to_string(fractionOfOrdinateRangeForAsymptoteIdentification)+"\n";
@@ -116,13 +99,6 @@ void displaySettings() {
              to_string(fractionOfOrdinateRangeForMaximumIdentification)+"\n";
     if (possibleNegativeOrdinates != false)
         s += "possibleNegativeOrdinates: true\n";
-    if (numberOfBootstrapVariations != 20)
-        s += "numberOfBootstrapVariations: "+
-             to_string(numberOfBootstrapVariations)+"\n";
-    if (lineUpMaxima != true)
-        s += "lineUpMaxima: false\n";
-    if (useSumOfIndexesForAlignment != true)
-        s += "useSumOfIndexesForAlignment: false\n";
     if (numberOfTrapezoids != 99)
         s += "numberOfTrapezoids: "+to_string(numberOfTrapezoids)+"\n";
     if (defaultRelativeError != 0.1)
@@ -133,9 +109,9 @@ void displaySettings() {
         s += "Saving the data for every spline for the experimental data \n";
     if (coseUtili == true)
         s += "Generation of the recap file \n";
-    if (criterionSSE == true)
+    if (criterion == "SSE")
         s += "The choice of the best spline for the experimental data is done minimizing the SSE \n";
-    if (criterionBIC == true)
+    if (criterion == "BIC")
         s += "The choice of the best spline for the experimental data is done minimizing the BIC \n";
     if (removeAsymptotes == false)
         s += "Not removing the left and right asymptotes for the spline";

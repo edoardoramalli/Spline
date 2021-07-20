@@ -12,6 +12,10 @@ double lambdaSearchInterval = 6;
 lambda */
 int numberOfStepsLambda = 13;
 
+/* Number of steps in the for cycle for minimizing the smoothing parameter
+lambda */
+double numberOfRatiolkForAICcUse = 40;
+
 /* Fraction of the range of a spline on the y-axis for determining which
 segments of the spline count as asymptotes. If the oscillations of the spline
 at one of its extremities are contained within a horizontal area with size
@@ -30,20 +34,6 @@ double fractionOfOrdinateRangeForMaximumIdentification = 0.025;
 splines or whether they should be replaced with straight lines with ordinate 0
 */
 bool possibleNegativeOrdinates = false;
-
-/* DA TOGLIERE Number of plausible versions of the experimental data generated during the
-bootstrap procedure. numberOfBootstrapVariations = 1 : no bootstrap */
-int numberOfBootstrapVariations = 20;
-
-/* DA TOGLIERE Specifies whether the program should attempt to line up the maxima of
-experimental data and models during the shift procedure */
-bool lineUpMaxima = true;
-
-/* DA TOGLIERE Specifies whether the program should use the sum of the four dissimilarity
-indexes when calculating the shift, thus finding a single shift amount, or
-whether the program should consider each of the four indexes separately, thus
-obtaining four different values for the shift */
-bool useSumOfIndexesForAlignment = true;
 
 /* Number of trapezoids for the numerical calculation of the indexes */
 int numberOfTrapezoids = 99;
@@ -74,13 +64,7 @@ bool saveExpData = false;
 bool coseUtili = false;
 
 /**/
-bool criterionSSE = false;
-
-/**/
-bool criterionAIC = true;
-
-/**/
-bool criterionBIC = false;
+string criterion = "AIC";
 
 /**/
 bool removeAsymptotes = true;

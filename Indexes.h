@@ -36,9 +36,6 @@ private:
     /* Relative errors for each experimental data point */
     vector<double> relativeErrors;
 
-    /* Index in the splinesExp vector of the spline being considered */
-    int splineExpIndex;
-
     /* Index in the splinesExp vector of the best fit of the experimental data
     */
     int indexBestSplineExp;
@@ -46,29 +43,32 @@ private:
     /* Vector containing the Summed Squared errors of the spline for the experimental data*/
     vector<double> SSE;
 
-    /**/
+    /* Vector containing the likelihood function under the assumption of normal distributed error*/
     vector<double> ll;
 
-    /**/
+    /* Matrix containing AIC AICc BIC for every spline*/
     vector<vector<double>> information;
 
-    /**/
+    /* Degrees of freedom of the spline K in the spline class*/
     vector<int> numOfParam;
 
-    /**/
+    /* Aikake information criterion*/
     vector<double> AIC;
     
-    /**/
+    /* Correction of the AIC*/
     vector<double> AICc;
 
-    /**/
+    /* Baesyan information criterion*/
     vector<double> BIC;
 
     /**/
     vector<double> k; 
 
-    /**/
+    /* Ratio between Dof of the spline and the number of observation used to select between AIC and AICc*/
     vector<double> ratioLK;
+
+    /**/
+    vector<double> AICplusAICc;
     ////////////////////////////////////////////////////////////////////////////
 
     /* Reads the data relative to the experiment (x, y, relative errors) and the
@@ -83,11 +83,8 @@ private:
     /* Calculates the splines for the experimental data */
     void calculateSplines();
 
-    /* Calculates the indexes for each model */
-    void calculateIndexes();
-
     /* Select the best spline for the experimental data among the three calculated*/
-    void calculateIndeBestSplineExp();
+    void calculateIndexBestSplineExp();
 
     /* Saves the data necessary to plot the splines to .txt files */
     void saveGraphData();
@@ -95,16 +92,16 @@ private:
     /*Calculate the summed squared error to select the best spline for the 
     experimental data*/
 
-    double Stat_SSE(vector <double> b, vector<double> c);
+    double summedSquaredError(vector <double> b, vector<double> c);
 
     /* Function to calculate the likelihood function under the hypothesis of normal distributed
         errors*/
     vector<double> logLikeliHood(double n, vector<double> residuals);
 
-    /**/
+    /* Function to calculate AIC AICc BIC*/
     vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<int> numOfParam, vector<double> residuals);
 
-    /**/
+    /* Function to find the minimum of a vector of size 3*/
     int positionOfMinimum(vector<double> a);
 
 };
@@ -129,15 +126,8 @@ void Indexes::solve(const string& FolderPath,const string& FolderName,const stri
     // Calculates the splines for the experimental data
     this->calculateSplines();
 
-    // For each knot arrangement in the experimental data, calculates the
-    // indexes for each model
-    for (int b=0; b<splinesExp.size(); ++b) {
-        splineExpIndex = b;
-        this->calculateIndexes();
-    }
-
     // Calculates the scores from the indexes
-    this->calculateIndeBestSplineExp();
+    this->calculateIndexBestSplineExp();
 
     // Saves the data necessary to plot the splines to .txt files.
     // Used to interface with Alice's work
@@ -321,12 +311,22 @@ void Indexes::calculateSplines() {
     if (removeAsymptotes == true){
         splinesExp[0].removeAsymptotes();
     }
+    splinesExp[0].normalizeCoefficients(
+                                    -splinesExp[0].yD0Min,
+                                    splinesExp[0].yD0Max-splinesExp[0].yD0Min,
+                                    splinesExp[0].yD1MaxAbs);
+
 
     if (splinesExp.size() > 1) {
         splinesExp[1].solve(inputData[0],inputData[1],0,2);
         if (removeAsymptotes == true){
             splinesExp[1].removeAsymptotes();
         }
+        splinesExp[1].normalizeCoefficients(
+                                    -splinesExp[1].yD0Min,
+                                    splinesExp[1].yD0Max-splinesExp[1].yD0Min,
+                                    splinesExp[1].yD1MaxAbs);
+
     }
 
     if (splinesExp.size() > 2) {
@@ -334,28 +334,16 @@ void Indexes::calculateSplines() {
         if (removeAsymptotes == true){
             splinesExp[2].removeAsymptotes();
         }
+        splinesExp[2].normalizeCoefficients(
+                                    -splinesExp[2].yD0Min,
+                                    splinesExp[2].yD0Max-splinesExp[2].yD0Min,
+                                    splinesExp[2].yD1MaxAbs);
+
     }
 
 }
 
-
-
-void Indexes::calculateIndexes() {
-
-    int i = splineExpIndex;
-
-    // Normalizes the spline coefficients of the experimental data and of the
-    // first derivative of the experimental data
-    splinesExp[i].normalizeCoefficients(
-                                    -splinesExp[i].yD0Min,
-                                    splinesExp[i].yD0Max-splinesExp[i].yD0Min,
-                                    splinesExp[i].yD1MaxAbs);
-
-}
-
-
-
-void Indexes::calculateIndeBestSplineExp() {
+void Indexes::calculateIndexBestSplineExp() {
 
     // Selects the best spline of splinesExp
 
@@ -374,9 +362,9 @@ void Indexes::calculateIndeBestSplineExp() {
     for (int i=0; i<inputData[0].size();i++)
         ySpl_2.push_back(splinesExp[2].D0(inputData[0][i]));
     
-    SSE.push_back(Stat_SSE(inputData[1],ySpl_0));
-    SSE.push_back(Stat_SSE(inputData[1],ySpl_1));
-    SSE.push_back(Stat_SSE(inputData[1],ySpl_2));
+    SSE.push_back(summedSquaredError(inputData[1],ySpl_0));
+    SSE.push_back(summedSquaredError(inputData[1],ySpl_1));
+    SSE.push_back(summedSquaredError(inputData[1],ySpl_2));
 
     double numOfObs = inputData[0].size();
 
@@ -395,27 +383,25 @@ void Indexes::calculateIndeBestSplineExp() {
     for (int i=0; i<k.size();i++)
         ratioLK.push_back(k[i]/numOfObs);
 
-    if (criterionSSE == true){
+    if (criterion == "SSE"){
 
         indexBestSplineExp = positionOfMinimum(SSE);
     
     }
 
-    if (criterionAIC == true){   
+    if (criterion == "AIC"){
 
-        // for (int i = 0; i<AIC.size()-2; i++){
-        //     if (AIC[i]<=AIC[i+1] && AIC[i]<=AIC[i+2])
-        //         indexBestSplineExp = i;
-        //     else if (AIC[i+1]<=AIC[i] && AIC[i+1]<=AIC[i+2])
-        //         indexBestSplineExp = i+1;
-        //     else if (AIC[i+2]<=AIC[i] && AIC[i+2]<=AIC[i+1])
-        //         indexBestSplineExp = i+2;
-        // }    
+    	for (int i=0; i<ratioLK.size(); i++){
+    		if (ratioLK[i] <= numberOfRatiolkForAICcUse)
+    			AICplusAICc.push_back(AICc[i]);
+    		else
+    			AICplusAICc.push_back(AIC[i]);
+    	}   
 
-        indexBestSplineExp = positionOfMinimum(AIC);
+        indexBestSplineExp = positionOfMinimum(AICplusAICc);
     }
 
-    if (criterionBIC == true){
+    if (criterion == "BIC"){
         
         indexBestSplineExp = positionOfMinimum(BIC);
     }
@@ -646,10 +632,10 @@ void Indexes::saveGraphData() {
             ofstream script;
             script.open(pathAndName,std::ios::app);
 
-            script <<  "DoF"<< setw(10) << "index"<< setw(10) << "SSE" << setw(15)<< "AIC" << setw(14)<< "AICc" << setw(10)<< "BIC\n" ;
-            script << splinesExp[j].K << setw(7) << j << setw(22) << SSE[j]<< setw(12) << AIC[j] << setw(12) << AICc[j] << setw(10) << BIC[j]<<"\n";
-            script << splinesExp[p].K << setw(7) << p << setw(22) << SSE[p]<< setw(12) << AIC[p] << setw(12) << AICc[p] << setw(10) << BIC[p]<<"\n";
-            script << splinesExp[q].K << setw(7) << q << setw(22) << SSE[q]<< setw(12) << AIC[q] << setw(12) << AICc[q] << setw(10) << BIC[q]<<"\n";
+            script <<  "DoF"<< setw(10) << "index"<< setw(10) << "SSE" << setw(15)<< "AIC" << setw(14)<< "AICc" << setw(10)<< "BIC" << setw(15) << "ratioLK" << setw(15)<< "AICorAICc\n";
+            script << splinesExp[j].K << setw(7) << j << setw(22) << SSE[j]<< setw(12) << AIC[j] << setw(12) << AICc[j] << setw(10) << BIC[j]<<setw(15)<<ratioLK[j]<<setw(20)<<AICplusAICc[j]<<"\n";
+            script << splinesExp[p].K << setw(7) << p << setw(22) << SSE[p]<< setw(12) << AIC[p] << setw(12) << AICc[p] << setw(10) << BIC[p]<<setw(15)<<ratioLK[p]<<setw(20)<<AICplusAICc[p]<<"\n";
+            script << splinesExp[q].K << setw(7) << q << setw(22) << SSE[q]<< setw(12) << AIC[q] << setw(12) << AICc[q] << setw(10) << BIC[q]<<setw(15)<<ratioLK[q]<<setw(20)<<AICplusAICc[q]<<"\n";
 
             script.close();
         }
@@ -658,7 +644,7 @@ void Indexes::saveGraphData() {
 
 }
 
-double Indexes::Stat_SSE(vector <double> b, vector<double> c){
+double Indexes::summedSquaredError(vector <double> b, vector<double> c){
 
     vector<double> SSE;
     double s;
