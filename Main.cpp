@@ -221,8 +221,6 @@ vector<vector<double>> evaluateBestSplineD0 () {
     splineD0.push_back(x_D0);
     splineD0.push_back(y_D0);
 
-    printM(splineD0);
-
     return splineD0;
 
 }
@@ -257,11 +255,7 @@ int main() {
     vector<vector<double>> splineD0;
     vector<vector<double>> splineD1;
 
-    cout << "Curve Matching\n";
-
-    // Runs the calculations and saves the results
-
-    cout << "\nRunning";
+    cout << "\nRunning Spline Calculations\n";
 
     // qui scrivo io 
     // DATI DI INPUT
@@ -272,8 +266,6 @@ int main() {
     calculateBestSpline(x,y,criterion);
     splineD0 = evaluateBestSplineD0();
     splineD1 = evaluateBestSplineD1();
-
-    printM(splineD0);
 
     return 0;
 
