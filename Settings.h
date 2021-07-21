@@ -59,4 +59,7 @@ vector<vector<double>> pascalsTriangle;
 .R file or to a .txt for future plotting */
 int graphPoints = 500;
 
+/**/
+string criterion = "AIC";
+
 #endif //SPLINE_SETTINGS_H

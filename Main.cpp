@@ -272,7 +272,7 @@ int main() {
     vector<double> y = {0.00021,0.0002,0.00047,0.0005,0.00054,0.00028,0.000205};
 
     calculateSplines(x,y,removeAsymptotes);
-    calculateBestSpline(x,y,"AIC");
+    calculateBestSpline(x,y,criterion);
     splineD0 = evaluateBestSplineD0();
     splineD1 = evaluateBestSplineD1();
 
