@@ -120,18 +120,15 @@ vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<
 
 int positionOfMinimum(vector<double> a){
 
-    int index;
-
-    for (int i = 0; i<a.size()-2; i++){
-        if (a[i]<=a[i+1] && a[i]<=a[i+2])
-            index = i;
-        else if (a[i+1]<=a[i] && a[i+1]<=a[i+2])
-            index = i+1;
-        else if (a[i+2]<=a[i] && a[i+2]<=a[i+1])
-            index = i+2;
+    int indexmin = 0;
+    
+    for (unsigned i = 0; i < a.size(); ++i)
+    {
+        if (a[i] <= a[indexmin]) // Found a smaller min
+            indexmin = i;
     }
 
-    return index;
+    return indexmin;
 }
 
 void calculateBestSpline(vector<double> x, vector<double> y, string criterion){
