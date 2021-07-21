@@ -153,19 +153,40 @@ int calculateBestSpline(vector<double> x, vector<double> y, string criterion, ve
     vector<double> ratioLK;
     vector<double> k;
     double numOfObs = x.size();
-    
-    for (int i=0; i<x.size();i++)
-        ySpl_0.push_back(splinesExp[0].D0(x[i]));
-    
-    for (int i=0; i<x.size();i++)
-        ySpl_1.push_back(splinesExp[1].D0(x[i]));
 
-    for (int i=0; i<x.size();i++)
-        ySpl_2.push_back(splinesExp[2].D0(x[i]));
+    if (splinesExp.size()==1){
+        
+        for (int i=0; i<x.size();i++)
+            ySpl_0.push_back(splinesExp[0].D0(x[i]));
+        SSE.push_back(summedSquaredError(y,ySpl_0));
+    }
+    else if (splinesExp.size()==2){
+
+        for (int i=0; i<x.size();i++)
+            ySpl_0.push_back(splinesExp[0].D0(x[i]));
+        
+        for (int i=0; i<x.size();i++)
+            ySpl_1.push_back(splinesExp[1].D0(x[i]));
+        
+        SSE.push_back(summedSquaredError(y,ySpl_0));
+        
+        SSE.push_back(summedSquaredError(y,ySpl_1));
+    }
+    else{
     
-    SSE.push_back(summedSquaredError(y,ySpl_0));
-    SSE.push_back(summedSquaredError(y,ySpl_1));
-    SSE.push_back(summedSquaredError(y,ySpl_2));
+        for (int i=0; i<x.size();i++)
+            ySpl_0.push_back(splinesExp[0].D0(x[i]));
+        
+        for (int i=0; i<x.size();i++)
+            ySpl_1.push_back(splinesExp[1].D0(x[i]));
+
+        for (int i=0; i<x.size();i++)
+            ySpl_2.push_back(splinesExp[2].D0(x[i]));
+        
+        SSE.push_back(summedSquaredError(y,ySpl_0));
+        SSE.push_back(summedSquaredError(y,ySpl_1));
+        SSE.push_back(summedSquaredError(y,ySpl_2));
+    }
 
     ll = logLikeliHood(numOfObs,SSE);
 
@@ -204,6 +225,15 @@ int calculateBestSpline(vector<double> x, vector<double> y, string criterion, ve
         
         indexBestSplineExp = positionOfMinimum(BIC);
     }
+
+    cout<<"\n size of splinesExp "<<splinesExp.size()<<endl;
+    cout<<"\n size of SSE "<<SSE.size()<<endl;
+    cout<<"\n size of ll "<<ll.size()<<endl;
+    cout<<"\n size of AIC "<<AIC.size()<<endl;
+    cout<<"\n size of AICc "<<AICc.size()<<endl;
+    cout<<"\n size of BIC "<<BIC.size()<<endl;
+    cout<<"\n size of k "<<k.size()<<endl;
+
 
     return indexBestSplineExp;
 }
@@ -283,14 +313,11 @@ void edo(double* x, double* y, int length){
 
     int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
 
-    cout << "Berst splien: " << indexBestSplineExp << endl;
+    cout << "Best spline: " << indexBestSplineExp << endl;
 
-//    Spline best_spline = possibleSplines[indexBestSplineExp];
+    //    Spline best_spline = possibleSplines[indexBestSplineExp];
 
     cout << possibleSplines[index_best].D0(2.5) << endl;
-
-
-
 
     return;
 }
@@ -304,8 +331,8 @@ int main() {
 
     // qui scrivo io 
     // DATI DI INPUT
-    vector<double> x = {0.0 ,0.1,0.2 ,0.3,0.4,0.6,0.8};
-    vector<double> y = {0.00021,0.0002,0.00047,0.0005,0.00054,0.00028,0.000205};
+    vector<double> x = {0.0 ,0.1};
+    vector<double> y = {97,98};
 
     vector<Spline> possibleSplines = calculateSplines(x,y,removeAsymptotes);
     int index_best = calculateBestSpline(x,y,criterion, possibleSplines);
