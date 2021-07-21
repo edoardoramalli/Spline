@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <iomanip>
 
 using namespace std;
 
@@ -11,11 +12,13 @@ using namespace std;
 #include "Settings.h"
 
 
-vector<Spline> splinesExp;
+
 int indexBestSplineExp;
 
 
-void calculateSplines(vector<double> x, vector<double> y, bool removeAsymptotes) {
+vector<Spline> calculateSplines(vector<double> x, vector<double> y, bool removeAsymptotes) {
+
+    vector<Spline> splinesExp;
 
     if (x.size() < 3)
         splinesExp = vector<Spline>(1);
@@ -57,6 +60,8 @@ void calculateSplines(vector<double> x, vector<double> y, bool removeAsymptotes)
                                     splinesExp[2].yD1MaxAbs);
 
     }
+
+    return splinesExp;
 
 }
 
@@ -134,7 +139,8 @@ int positionOfMinimum(vector<double> a){
     return index;
 }
 
-void calculateBestSpline(vector<double> x, vector<double> y, string criterion){
+// Funziona se splinesExp len is 1?
+int calculateBestSpline(vector<double> x, vector<double> y, string criterion, vector<Spline> splinesExp){
 
     vector<double> ySpl_0;
     vector<double> ySpl_1;
@@ -201,25 +207,26 @@ void calculateBestSpline(vector<double> x, vector<double> y, string criterion){
         
         indexBestSplineExp = positionOfMinimum(BIC);
     }
+
+    return indexBestSplineExp;
 }
 
-vector<vector<double>> evaluateBestSplineD0 () {
+vector<vector<double>> evaluateBestSplineD0 (Spline best_spline) {
 
-    int j = indexBestSplineExp;
     auto x_D0 = vector<double>(graphPoints);
     auto y_D0 = vector<double>(graphPoints);
     vector<vector<double>> splineD0;
 
-    double distance = (splinesExp[j].knots.back()-splinesExp[j].knots[0]) / (double)(graphPoints);
+    double distance = (best_spline.knots.back()-best_spline.knots[0]) / (double)(graphPoints);
 
     for (int b=0; b<graphPoints; ++b)
-        x_D0[b] = splinesExp[j].knots[0]+(double)b*distance;
-    x_D0.back() = splinesExp[j].knots.back();
+        x_D0[b] = best_spline.knots[0]+(double)b*distance;
+    x_D0.back() = best_spline.knots.back();
 
     // Calculates the ordinates
 
     for (int b=0; b<graphPoints; ++b)
-        y_D0[b] = splinesExp[j].D0(x_D0[b]);
+        y_D0[b] = best_spline.D0(x_D0[b]);
 
     splineD0.push_back(x_D0);
     splineD0.push_back(y_D0);
@@ -230,29 +237,67 @@ vector<vector<double>> evaluateBestSplineD0 () {
 
 }
 
-vector<vector<double>> evaluateBestSplineD1 () {
+vector<vector<double>> evaluateBestSplineD1 (Spline best_spline) {
 
-    int j = indexBestSplineExp;
     auto x_D1 = vector<double>(graphPoints);
     auto y_D1 = vector<double>(graphPoints);
     vector<vector<double>> splineD1;
 
-    double distance = (splinesExp[j].knots.back()-splinesExp[j].knots[0]) / (double)(graphPoints);
+    double distance = (best_spline.knots.back()-best_spline.knots[0]) / (double)(graphPoints);
 
     for (int b=0; b<graphPoints; ++b)
-        x_D1[b] = splinesExp[j].knots[0]+(double)b*distance;
-    x_D1.back() = splinesExp[j].knots.back();
+        x_D1[b] = best_spline.knots[0]+(double)b*distance;
+    x_D1.back() = best_spline.knots.back();
 
     // Calculates the ordinates
 
     for (int b=0; b<graphPoints; ++b)
-        y_D1[b] = splinesExp[j].D1(x_D1[b]);
+        y_D1[b] = best_spline.D1(x_D1[b]);
 
     splineD1.push_back(x_D1);
     splineD1.push_back(y_D1);
 
     return splineD1;
 
+}
+
+extern "C"
+void edo(double* x, double* y, int length){
+
+    vector<double> x_vector(x, x + length);
+    vector<double> y_vector(y, y + length);
+
+
+    cout <<  "X: ";
+
+    for (int i =0; i < length; i++){
+        cout << std::setprecision(12) << x_vector[i] << " ";
+    }
+
+    cout << endl;
+
+    cout <<  "Y: ";
+
+    for (int i =0; i < length; i++){
+        cout << std::setprecision(12) << y_vector[i] << " ";
+    }
+
+    cout << endl;
+
+    vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, true);
+
+    int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
+
+    cout << "Berst splien: " << indexBestSplineExp << endl;
+
+//    Spline best_spline = possibleSplines[indexBestSplineExp];
+
+    cout << possibleSplines[index_best].D0(2.5) << endl;
+
+
+
+
+    return;
 }
 
 int main() {
@@ -271,10 +316,10 @@ int main() {
     vector<double> x = {0.0 ,0.1,0.2 ,0.3,0.4,0.6,0.8};
     vector<double> y = {0.00021,0.0002,0.00047,0.0005,0.00054,0.00028,0.000205};
 
-    calculateSplines(x,y,removeAsymptotes);
-    calculateBestSpline(x,y,criterion);
-    splineD0 = evaluateBestSplineD0();
-    splineD1 = evaluateBestSplineD1();
+    vector<Spline> possibleSplines = calculateSplines(x,y,removeAsymptotes);
+    int index_best = calculateBestSpline(x,y,criterion, possibleSplines);
+    splineD0 = evaluateBestSplineD0(possibleSplines[index_best]);
+    splineD1 = evaluateBestSplineD1(possibleSplines[index_best]);
 
     printM(splineD0);
 
