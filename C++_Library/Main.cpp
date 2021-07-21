@@ -125,18 +125,15 @@ vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<
 
 int positionOfMinimum(vector<double> a){
 
-    int index;
-
-    for (int i = 0; i<a.size()-2; i++){
-        if (a[i]<=a[i+1] && a[i]<=a[i+2])
-            index = i;
-        else if (a[i+1]<=a[i] && a[i+1]<=a[i+2])
-            index = i+1;
-        else if (a[i+2]<=a[i] && a[i+2]<=a[i+1])
-            index = i+2;
+    int indexmin = 0;
+    
+    for (unsigned i = 0; i < a.size(); ++i)
+    {
+        if (a[i] <= a[indexmin]) // Found a smaller min
+            indexmin = i;
     }
 
-    return index;
+    return indexmin;
 }
 
 // Funziona se splinesExp len is 1?
@@ -231,8 +228,6 @@ vector<vector<double>> evaluateBestSplineD0 (Spline best_spline) {
     splineD0.push_back(x_D0);
     splineD0.push_back(y_D0);
 
-    printM(splineD0);
-
     return splineD0;
 
 }
@@ -305,11 +300,7 @@ int main() {
     vector<vector<double>> splineD0;
     vector<vector<double>> splineD1;
 
-    cout << "Curve Matching\n";
-
-    // Runs the calculations and saves the results
-
-    cout << "\nRunning";
+    cout << "\nRunning Spline Calculations\n";
 
     // qui scrivo io 
     // DATI DI INPUT
@@ -320,8 +311,6 @@ int main() {
     int index_best = calculateBestSpline(x,y,criterion, possibleSplines);
     splineD0 = evaluateBestSplineD0(possibleSplines[index_best]);
     splineD1 = evaluateBestSplineD1(possibleSplines[index_best]);
-
-    printM(splineD0);
 
     return 0;
 
