@@ -1,3 +1,10 @@
+//
+// Created by Edoardo Ramalli on 05/05/21.
+// Modified by Timoteo Dinelli on 20/07/21.
+//
+
+#ifndef SPLINE_SETTINGS_H
+#define SPLINE_SETTINGS_H
 /* Order of the basis functions */
 int m = 4;
 
@@ -42,39 +49,14 @@ int numberOfTrapezoids = 99;
 errors are not provided along with the experimental data */
 double defaultRelativeError = 0.1;
 
-/* Specifies whether to create the graphs comparing the spline for the
-experimental data with the splines for the models */
-bool graphsD0 = true;
-
-/* Specifies whether to create the graphs comparing the first derivative of the
-spline for the experimental data with the first derivatives of the splines for
-the models */
-bool graphsD1 = false;
-
-/* Per stampare tutte le spline non solo la migliore */
-bool allSplineExp = false;
-
-/* Per stampare i nodi scelti per il calcolo della spline */
-bool knotsToSave = false;
-
-/* Per stampare i nodi scelti per il calcolo della spline */
-bool saveExpData = false;
-
-/* Stampa di un file txt con un recap sulle spline */
-bool coseUtili = false;
-
-/**/
-string criterion = "AIC";
-
 /**/
 bool removeAsymptotes = true;
 
-/* Specifies whether at least one kind of graph is to be created */
-bool graphs = true;
+/* Pascal's triangle */
+vector<vector<double>> pascalsTriangle;
 
 /* Number of points to be calculated for each spline when saving the spline to a
 .R file or to a .txt for future plotting */
 int graphPoints = 500;
 
-/* Pascal's triangle */
-vector<vector<double>> pascalsTriangle;
+#endif //SPLINE_SETTINGS_H

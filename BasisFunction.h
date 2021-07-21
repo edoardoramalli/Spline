@@ -1,3 +1,6 @@
+
+#include "Settings.h"
+
 class BasisFunction {
 
 public:
