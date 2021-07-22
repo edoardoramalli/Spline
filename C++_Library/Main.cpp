@@ -70,6 +70,8 @@ void compute_spline_cpp(double* x, double* y, int length,
         printM(best_spline.coeffD0);
         cout << "SETTINGS:" << endl;
         printSettings();
+        cout << "D0:" << endl;
+        printM(evaluateBestSplineD0(best_spline));
     }
 
 

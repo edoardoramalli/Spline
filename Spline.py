@@ -23,7 +23,7 @@ class Spline:
         self.verbose = verbose
 
         # Settings
-        # TODO inserire controlli settings di ingresso
+        # TODO inserire controlli settings in ingresso
         self.m = m
         self.g = g
         self.lambdaSearchInterval = lambdaSearchInterval
@@ -33,7 +33,7 @@ class Spline:
         self.fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification
         self.possibleNegativeOrdinates = possibleNegativeOrdinates
         self.removeAsymptotes = removeAsymptotes
-        self.graphPoints = graphPoints  # TODO se verbose possiamo far stampare dei valori
+        self.graphPoints = graphPoints
         self.criterion = criterion
 
         # Backwards
