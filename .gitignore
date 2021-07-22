@@ -1,6 +1,14 @@
 .idea/
 .DS_Store
 
-edo.o
-
 __pycache__/
+
+SplinePoliMi/SplineGenerator.o
+
+SplinePoliMi.egg-info/
+
+build/
+
+dist/
+
+SplineGenerator.o
