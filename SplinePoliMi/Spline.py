@@ -10,14 +10,19 @@ def listToArray(ll):
 
 
 class Spline:
-
     binariesFileName = 'SplineGenerator.o'
 
-    def compile_cpp(self, module_path, compiler='g++'):
+    @staticmethod
+    def compileBinaries(module_path, compiler='g++'):
+        print('Compiling binaries...')
         flags_compiler = '-std=c++17 -O3 -Wall -DNDEBUG'
         input_main = os.path.join(module_path, 'main.cpp')
-        output_exec = os.path.join(module_path, self.binariesFileName)
+        output_exec = os.path.join(module_path, Spline.binariesFileName)
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
+
+    def checkSettings(self):
+        # TODO inserire controlli settings in ingresso
+        pass
 
     def __init__(self, x: list, y: list,
                  verbose: bool = False,
@@ -28,10 +33,16 @@ class Spline:
                  criterion: str = 'AIC'
                  ):
 
-        dir_path = os.path.dirname(sys.modules[self.__module__].__file__)
+        self.module_path = os.path.dirname(sys.modules[self.__module__].__file__)
 
-        if not os.path.isfile(os.path.join(dir_path, self.binariesFileName)):
-            self.compile_cpp(dir_path)
+        if not os.path.isfile(os.path.join(self.module_path, self.binariesFileName)):
+            self.compileBinaries(module_path=self.module_path)
+
+        if len(x) != len(y):
+            raise ValueError('X and Y have different lengths!')
+
+        if len(x) <= 1:
+            raise ValueError('X and Y need more points!')
 
         # Input x,y has to be sorted by x
         self.x, self.y = zip(*sorted(zip(x, y)))
@@ -39,7 +50,6 @@ class Spline:
         self.verbose = verbose
 
         # Settings
-        # TODO inserire controlli settings in ingresso
         self.m = m
         self.g = g
         self.lambdaSearchInterval = lambdaSearchInterval
@@ -61,14 +71,11 @@ class Spline:
         self.coeffD2 = None
 
         # Start
-        # self.computeSpline()
-
-    def recompileBinaries(self, compiler='g++'):
-        self.compile_cpp(module_path=os.path.dirname(sys.modules[self.__module__].__file__), compiler=compiler)
+        self.computeSpline()
 
     def computeSpline(self):
         try:
-            c_library = cdll.LoadLibrary(self.binariesFileName)
+            c_library = cdll.LoadLibrary(os.path.join(self.module_path, self.binariesFileName))
         except OSError:
             raise OSError("Unable to load the system C library")
 
