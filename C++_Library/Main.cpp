@@ -6,17 +6,22 @@
 
 using namespace std;
 
-#include "Utilities.h"
+#include "Settings.h"
 #include "BasisFunction.h"
 #include "Spline.h"
-#include "Settings.h"
+
+#include "Utilities.h"
+
+
+
 #include "ComputeSpline.h"
 
 
 
 extern "C"
 void compute_spline_cpp(double* x, double* y, int length,
-            int* numberOfKnots, int* numberOfPolynomials, double* coeffDO, double* knots,
+            int* numberOfKnots, int* numberOfPolynomials,
+            double* coeffDO, double* coeffD1, double* coeffD2, double* knots,
             bool verbose,
             int m_, int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
             double fractionOfOrdinateRangeForAsymptoteIdentification_, double fractionOfOrdinateRangeForMaximumIdentification_,
@@ -60,18 +65,56 @@ void compute_spline_cpp(double* x, double* y, int length,
 
     // ---------- VERBOSE ----------
     if(verbose){
-        cout << "X:" << endl;
+        vector<vector<double>> tmp;
+
+        cout << "Original X: ";
         printV_inLine(x_vector);
-        cout << "Y:" << endl;
+        cout << "Original Y: ";
         printV_inLine(y_vector);
-        cout << "KNOTS:" << endl;
+        cout << endl;
+
+        cout << "Spline X: ";
+        printV_inLine(best_spline.abscissae);
+        cout << "Spline Y: ";
+        printV_inLine(best_spline.ordinates);
+        cout << endl;
+
+        cout << "KNOTS: ";
         printV_inLine(best_spline.knots);
+        cout << endl;
+
         cout << "CoeffD0:" << endl;
         printM(best_spline.coeffD0);
+        cout << "CoeffD1:" << endl;
+        printM(best_spline.coeffD1);
+        cout << "CoeffD2:" << endl;
+        printM(best_spline.coeffD2);
         cout << "SETTINGS:" << endl;
         printSettings();
+
+        cout << endl;
+
         cout << "D0:" << endl;
-        printM(evaluateBestSplineD0(best_spline));
+        tmp = evaluateSpline(best_spline, 0);
+        cout << "\tx: ";
+        printV_inLine(tmp[0]);
+        cout << "\ty: ";
+        printV_inLine(tmp[1]);
+
+        cout << "D1:" << endl;
+        tmp = evaluateSpline(best_spline, 1);
+        cout << "\tx: ";
+        printV_inLine(tmp[0]);
+        cout << "\ty: ";
+        printV_inLine(tmp[1]);
+
+        cout << "D2:" << endl;
+        tmp = evaluateSpline(best_spline, 2);
+        cout << "\tx: ";
+        printV_inLine(tmp[0]);
+        cout << "\ty: ";
+        printV_inLine(tmp[1]);
+
     }
 
 
@@ -84,6 +127,8 @@ void compute_spline_cpp(double* x, double* y, int length,
     for(int i = 0; i < best_spline.coeffD0.size(); i++){
         for(int j = 0; j < best_spline.coeffD0[i].size(); j++){
             coeffDO[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD0[i][j];
+            coeffD1[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD1[i][j];
+            coeffD2[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD2[i][j];
         }
     }
 

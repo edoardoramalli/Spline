@@ -195,3 +195,44 @@ void invertWithGaussJordan(vector<vector<double>>& A,
     }
 
 }
+
+vector<vector<double>> evaluateSpline (Spline best_spline, int der) {
+
+    auto x_eval = vector<double>(graphPoints);
+    auto y_eval = vector<double>(graphPoints);
+    vector<vector<double>> spline_evaluate;
+
+
+    double (Spline::*evaluate_function)(double);
+
+    if (der == 0){
+        evaluate_function = &Spline::D0;
+    }
+    else if (der == 1){
+        evaluate_function = &Spline::D1;
+    }
+    else if (der == 2){
+        evaluate_function = &Spline::D2;
+    }
+
+    double distance = (best_spline.knots.back()-best_spline.knots[0]) / (double)(graphPoints);
+
+    for (int b=0; b<graphPoints; ++b){
+        x_eval[b] = best_spline.knots[0]+(double)b*distance;
+    }
+
+    x_eval.back() = best_spline.knots.back();
+
+    // Calculates the ordinates
+
+    for (int b=0; b<graphPoints; ++b){
+        y_eval[b] = (best_spline.*evaluate_function)(x_eval[b]);
+    }
+
+
+    spline_evaluate.push_back(x_eval);
+    spline_evaluate.push_back(y_eval);
+
+    return spline_evaluate;
+
+}

@@ -41,6 +41,8 @@ class Spline:
         self.numberOfPolynomials = None
         self.knots = None
         self.coeffD0 = None
+        self.coeffD1 = None
+        self.coeffD2 = None
 
         # Start
         self.computeSpline()
@@ -57,6 +59,8 @@ class Spline:
                                                  c_void_p,  # numberOfKnots
                                                  c_void_p,  # numberOfPolynomials
                                                  c_void_p,  # coeffDO
+                                                 c_void_p,  # coeffD1
+                                                 c_void_p,  # coeffD2
                                                  c_void_p,  # knots
                                                  c_bool,  # verbose
                                                  c_int,  # m
@@ -77,6 +81,8 @@ class Spline:
         numberOfKnots_c = c_int()
         numberOfPolynomials_c = c_int()
         coeffD0_c = (len(self.x) * self.m * c_double)()
+        coeffD1_c = (len(self.x) * self.m * c_double)()
+        coeffD2_c = (len(self.x) * self.m * c_double)()
         knots_c = (len(self.x) * c_double)()
 
         c_library.compute_spline_cpp(x_c,  # x
@@ -85,6 +91,8 @@ class Spline:
                                      pointer(numberOfKnots_c),  # numberOfKnots
                                      pointer(numberOfPolynomials_c),  # numberOfPolynomials
                                      pointer(coeffD0_c),  # coeffDO
+                                     pointer(coeffD1_c),  # coeffD1
+                                     pointer(coeffD2_c),  # coeffD2
                                      pointer(knots_c),  # knots
                                      c_bool(self.verbose),  # verbose
                                      c_int(self.m),  # m
@@ -106,26 +114,44 @@ class Spline:
         self.numberOfPolynomials = numberOfPolynomials_c.value
         self.coeffD0 = np.reshape(np.array(coeffD0_c[0: self.m * self.numberOfPolynomials]),
                                   (self.numberOfPolynomials, self.m))
+        self.coeffD1 = np.reshape(np.array(coeffD1_c[0: self.m * self.numberOfPolynomials]),
+                                  (self.numberOfPolynomials, self.m))
+        self.coeffD2 = np.reshape(np.array(coeffD2_c[0: self.m * self.numberOfPolynomials]),
+                                  (self.numberOfPolynomials, self.m))
         self.knots = np.array(knots_c[0: self.numberOfKnots])
 
-    def D0(self, x):
-        if not any([self.numberOfKnots, self.knots, self.m, self.coeffD0]):
-            raise ValueError('Spline is not computed yet!')
-
+    def compute(self, x, k, coeff):
         indexOfPolynomial = 0
+
         for i in range(0, self.numberOfKnots - 1):
             if x > self.knots[i]:
                 indexOfPolynomial = i
             else:
                 break
 
-        powers = [1] * self.m
+        powers = [1] * k
 
-        for i in range(1, self.m):
+        for i in range(1, k):
             powers[i] = powers[i - 1] * x
 
         y_val = 0
-        for i in range(0, self.m):
-            y_val += self.coeffD0[indexOfPolynomial][i] * powers[i]
+        for i in range(0, k):
+            y_val += coeff[indexOfPolynomial][i] * powers[i]
 
         return y_val
+
+    def evaluate(self, x: int, der: int = 0):
+        if not any([self.numberOfKnots, self.knots, self.m, self.coeffD0, self.coeffD1, self.coeffD2]):
+            raise ValueError('Spline is not computed yet!')
+        if der == 0:
+            k = self.m
+            coeff = self.coeffD0
+        elif der == 1:
+            k = self.g
+            coeff = self.coeffD1
+        elif der == 2:
+            k = self.g - 1
+            coeff = self.coeffD2
+        else:
+            raise ValueError('Derivative does not exists!')
+        return self.compute(x=x, k=k, coeff=coeff)
