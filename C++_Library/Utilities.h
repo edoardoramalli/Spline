@@ -1,3 +1,5 @@
+#include "Settings.h"
+
 /* Prints a vector */
 auto printV = [](const auto& vector) {
 
@@ -6,6 +8,33 @@ auto printV = [](const auto& vector) {
     cout << endl;
 
 };
+
+auto printV_inLine = [](const auto& vector) {
+
+    cout << "[";
+    for (int i=0; i<vector.size(); ++i)
+        cout << vector[i] << ", ";
+    cout << "]" << endl;
+
+};
+
+/* Print settings */
+void printSettings(){
+    cout << "m:  " << m << endl;
+    cout << "g:  " << g << endl;
+    cout << "lambdaSearchInterval:  " << lambdaSearchInterval << endl;
+    cout << "numberOfStepsLambda:  " << numberOfStepsLambda << endl;
+    cout << "numberOfRatiolkForAICcUse:  " << numberOfRatiolkForAICcUse << endl;
+    cout << "fractionOfOrdinateRangeForAsymptoteIdentification:  " << fractionOfOrdinateRangeForAsymptoteIdentification << endl;
+    cout << "fractionOfOrdinateRangeForMaximumIdentification:  " << fractionOfOrdinateRangeForMaximumIdentification << endl;
+    cout << "possibleNegativeOrdinates:  " << possibleNegativeOrdinates << endl;
+    cout << "removeAsymptotes:  " << removeAsymptotes << endl;
+    cout << "graphPoints:  " << graphPoints << endl;
+    cout << "criterion:  " << criterion << endl;
+
+    // NB: pascalsTriangle is not printed
+
+}
 
 
 

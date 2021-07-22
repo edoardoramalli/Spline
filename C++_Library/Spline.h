@@ -182,6 +182,9 @@ public:
     roots */
     vector<double> calculateRoots(double derivativeOrder);
 
+    /* Powers of the abscissa being considered */
+    vector<double> powers;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 private:
@@ -218,9 +221,6 @@ private:
 
     /* Number of polynomials which are asymptotes on the right of the spline */
     double numberOfAsymptotePolynomialsRight;
-
-    /* Powers of the abscissa being considered */
-    vector<double> powers;
 
     /* coeffD0, normalized */
     vector<vector<double>> coeffD0_normalized;
@@ -959,13 +959,13 @@ void Spline::calculateCoefficients() {
         round(2.*(log10(indexFiTFi)-log10(indexR)))/2.;
 
     // Calculates the end points of the log10lambda minimization interval
-    log10lambdaMin = log10lambdaForSameOrderOfMagnitude-lambdaSearchInterval/2.;
-    log10lambdaMax = log10lambdaForSameOrderOfMagnitude+lambdaSearchInterval/2.;
+    log10lambdaMin = log10lambdaForSameOrderOfMagnitude-(double)lambdaSearchInterval/2.;
+    log10lambdaMax = log10lambdaForSameOrderOfMagnitude+(double)lambdaSearchInterval/2.;
 
     // Calculates the log10 of the distance between two consecutive steps in the
     // for cycle for minimizing log10lambda
     double log10lambdaStep =
-        lambdaSearchInterval/(double)(numberOfStepsLambda-1);
+        (double)lambdaSearchInterval/(double)(numberOfStepsLambda-1);
 
     // Initializes the elements necessary for the minimization
     auto M = vector<vector<double>>(K,vector<double>(K,0));
@@ -1354,12 +1354,18 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
 
             double zero = -d0/c0;
 
-            if (zero >= knots[i] && zero <= knots[i+1])
-                if (roots.size() == 0)
+            if (zero >= knots[i] && zero <= knots[i+1]){
+                if (roots.size() == 0){
                     roots.push_back(zero);
-                else
-                    if (zero != roots.back())
+                }
+                else{
+                    if (zero != roots.back()){
                         roots.push_back(zero);
+                    }
+                }
+
+            }
+
 
         }
 
@@ -1375,29 +1381,41 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
 
             if (delta == 0) {
                 double zero = -b/(2.*a);
-                if (zero >= knots[i] && zero <= knots[i+1])
-                    if (roots.size() == 0)
+                if (zero >= knots[i] && zero <= knots[i+1]){
+                    if (roots.size() == 0){
                         roots.push_back(zero);
-                    else
-                        if (zero != roots.back())
+                    }
+                    else{
+                        if (zero != roots.back()){
                             roots.push_back(zero);
+                        }
+                    }
+                }
             }
 
             if (delta > 0) {
                 double x1 = (-b-sqrt(delta))/(2.*a);
                 double x2 = (-b+sqrt(delta))/(2.*a);
-                if (x1 >= knots[i] && x1 <= knots[i+1])
-                    if (roots.size() == 0)
+                if (x1 >= knots[i] && x1 <= knots[i+1]){
+                    if (roots.size() == 0){
                         roots.push_back(x1);
-                    else
-                        if (x1 != roots.back())
+                    }
+                    else{
+                        if (x1 != roots.back()){
                             roots.push_back(x1);
-                if (x2 >= knots[i] && x2 <= knots[i+1])
-                    if (roots.size() == 0)
+                        }
+                    }
+                }
+                if (x2 >= knots[i] && x2 <= knots[i+1]){
+                    if (roots.size() == 0){
                         roots.push_back(x2);
-                    else
-                        if (x2 != roots.back())
+                    }
+                    else{
+                        if (x2 != roots.back()){
                             roots.push_back(x2);
+                        }
+                    }
+                }
             }
 
         }
@@ -1451,33 +1469,45 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
                 if (Q > 0) {
                     fi = 1./3.*acosh(fabs(R)/sqrt(Q*Q*Q));
                     double zero = -2.*signOfR*sqrt(Q)*cosh(fi)-a/3.;
-                    if (zero >= knots[i] && zero <= knots[i+1])
-                        if (roots.size() == 0)
+                    if (zero >= knots[i] && zero <= knots[i+1]){
+                        if (roots.size() == 0){
                             roots.push_back(zero);
-                        else
-                            if (zero != roots.back())
+                        }
+                        else{
+                            if (zero != roots.back()){
                                 roots.push_back(zero);
+                            }
+                        }
+                    }
                 }
 
                 if (Q < 0) {
                     fi = 1./3.*asinh(fabs(R)/sqrt(fabs(Q*Q*Q)));
                     double zero = -2.*signOfR*sqrt(fabs(Q))*sinh(fi)-a/3.;
-                    if (zero >= knots[i] && zero <= knots[i+1])
-                        if (roots.size() == 0)
+                    if (zero >= knots[i] && zero <= knots[i+1]){
+                        if (roots.size() == 0){
                             roots.push_back(zero);
-                        else
-                            if (zero != roots.back())
+                        }
+                        else{
+                            if (zero != roots.back()){
                                 roots.push_back(zero);
+                            }
+                        }
+                    }
                 }
 
                 if (Q == 0) {
                     double zero = -pow(c-a*a*a/27.,1./3.)-a/3.;
-                    if (zero >= knots[i] && zero <= knots[i+1])
-                        if (roots.size() == 0)
+                    if (zero >= knots[i] && zero <= knots[i+1]){
+                        if (roots.size() == 0){
                             roots.push_back(zero);
-                        else
-                            if (zero != roots.back())
+                        }
+                        else{
+                            if (zero != roots.back()){
                                 roots.push_back(zero);
+                            }
+                        }
+                    }
                 }
 
             }

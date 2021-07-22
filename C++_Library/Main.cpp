@@ -136,7 +136,6 @@ int positionOfMinimum(vector<double> a){
     return indexmin;
 }
 
-// Funziona se splinesExp len is 1?
 int calculateBestSpline(vector<double> x, vector<double> y, string criterion, vector<Spline> splinesExp){
 
     vector<double> ySpl_0;
@@ -226,15 +225,6 @@ int calculateBestSpline(vector<double> x, vector<double> y, string criterion, ve
         indexBestSplineExp = positionOfMinimum(BIC);
     }
 
-    cout<<"\n size of splinesExp "<<splinesExp.size()<<endl;
-    cout<<"\n size of SSE "<<SSE.size()<<endl;
-    cout<<"\n size of ll "<<ll.size()<<endl;
-    cout<<"\n size of AIC "<<AIC.size()<<endl;
-    cout<<"\n size of AICc "<<AICc.size()<<endl;
-    cout<<"\n size of BIC "<<BIC.size()<<endl;
-    cout<<"\n size of k "<<k.size()<<endl;
-
-
     return indexBestSplineExp;
 }
 
@@ -287,57 +277,101 @@ vector<vector<double>> evaluateBestSplineD1 (Spline best_spline) {
 }
 
 extern "C"
-void edo(double* x, double* y, int length){
+void compute_spline_cpp(double* x, double* y, int length,
+            int* numberOfKnots, int* numberOfPolynomials, double* coeffDO, double* knots,
+            bool verbose,
+            int m_, int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
+            double fractionOfOrdinateRangeForAsymptoteIdentification_, double fractionOfOrdinateRangeForMaximumIdentification_,
+            bool possibleNegativeOrdinates_, bool removeAsymptotes_, int graphPoints_, char* criterion_){
+
+
+    // ----------  SET VARIABLE  ----------
 
     vector<double> x_vector(x, x + length);
     vector<double> y_vector(y, y + length);
 
 
-    cout <<  "X: ";
 
-    for (int i =0; i < length; i++){
-        cout << std::setprecision(12) << x_vector[i] << " ";
-    }
 
-    cout << endl;
 
-    cout <<  "Y: ";
+    // ----------  SET SETTINGS  ----------
 
-    for (int i =0; i < length; i++){
-        cout << std::setprecision(12) << y_vector[i] << " ";
-    }
+    m = m_;
+    g = g_;
+    lambdaSearchInterval = lambdaSearchInterval_;
+    numberOfStepsLambda = numberOfStepsLambda_;
+    numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse_;
+    fractionOfOrdinateRangeForAsymptoteIdentification = fractionOfOrdinateRangeForAsymptoteIdentification_;
+    fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification_;
+    possibleNegativeOrdinates = possibleNegativeOrdinates_;
+    removeAsymptotes = removeAsymptotes_;
+    graphPoints = graphPoints_;
+    criterion = string(criterion_);
 
-    cout << endl;
+
+
+    // ----------  COMPUTE BEST SPLINE  ----------
+
 
     vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, true);
 
     int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
 
-    cout << "Best spline: " << indexBestSplineExp << endl;
+    Spline best_spline = possibleSplines[index_best];
 
-    //    Spline best_spline = possibleSplines[indexBestSplineExp];
 
-    cout << possibleSplines[index_best].D0(2.5) << endl;
+    // ---------- VERBOSE ----------
+    if(verbose){
+        cout << "X:" << endl;
+        printV_inLine(x_vector);
+        cout << "Y:" << endl;
+        printV_inLine(y_vector);
+        cout << "KNOTS:" << endl;
+        printV_inLine(best_spline.knots);
+        cout << "CoeffD0:" << endl;
+        printM(best_spline.coeffD0);
+        cout << "SETTINGS:" << endl;
+        printSettings();
+    }
+
+
+
+    // ----------  PASS BACK THE RESULTS  ----------
+
+    *numberOfKnots = best_spline.numberOfKnots;
+    *numberOfPolynomials = best_spline.numberOfPolynomials;
+
+    for(int i = 0; i < best_spline.coeffD0.size(); i++){
+        for(int j = 0; j < best_spline.coeffD0[i].size(); j++){
+            coeffDO[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD0[i][j];
+        }
+    }
+
+    for(int i = 0; i < best_spline.numberOfKnots; i++){
+        knots[i] = best_spline.knots[i];
+    }
+
+
 
     return;
 }
 
 int main() {
-
-    vector<vector<double>> splineD0;
-    vector<vector<double>> splineD1;
-
-    cout << "\nRunning Spline Calculations\n";
-
-    // qui scrivo io 
-    // DATI DI INPUT
-    vector<double> x = {0.0 ,0.1};
-    vector<double> y = {97,98};
-
-    vector<Spline> possibleSplines = calculateSplines(x,y,removeAsymptotes);
-    int index_best = calculateBestSpline(x,y,criterion, possibleSplines);
-    splineD0 = evaluateBestSplineD0(possibleSplines[index_best]);
-    splineD1 = evaluateBestSplineD1(possibleSplines[index_best]);
+//    vector<vector<double>> splineD0;
+//    vector<vector<double>> splineD1;
+//
+//    cout << "\nRunning Spline Calculations\n";
+//
+//    // qui scrivo io
+//    // DATI DI INPUT
+//    // NB!!!!! devono essere ordinate rispetto x
+//    vector<double> x = {0.0 ,0.1, 0.2, 0.4};
+//    vector<double> y = {97,98, 99, 100};
+//
+//    vector<Spline> possibleSplines = calculateSplines(x,y,removeAsymptotes);
+//    int index_best = calculateBestSpline(x,y,criterion, possibleSplines);
+//    splineD0 = evaluateBestSplineD0(possibleSplines[index_best]);
+//    splineD1 = evaluateBestSplineD1(possibleSplines[index_best]);
 
     return 0;
 
