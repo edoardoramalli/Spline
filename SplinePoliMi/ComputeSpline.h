@@ -13,7 +13,7 @@ vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineTy
         splines = vector<Spline>(3);
 
     for (int i = 0; i < splines.size(); i++) {
-        splines[i].solve(x, y, 0, numberOfAbscissaeSeparatingConsecutiveKnots_vector[i]);
+        splines[i].solve(x, y, splineType, numberOfAbscissaeSeparatingConsecutiveKnots_vector[i]);
         if (removeAsymptotes == true){
             splines[i].removeAsymptotes();
         }
@@ -29,8 +29,8 @@ vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineTy
 
 double summedSquaredError(vector <double> b, vector<double> c){
     double SSE = 0;
-    for(int i=0; i<b.size(); i++){
-        SSE += pow((b[i]-c[i]), 2);
+    for(int i=0; i < b.size(); i++){
+        SSE += pow((b[i] - c[i]), 2);
     }
     return SSE;
 }
@@ -39,7 +39,7 @@ vector<double> logLikeliHood(double n, vector<double> residuals){
 
     vector<double> ll;
 
-    for(int i=0; i<residuals.size(); i++)
+    for(int i=0; i < residuals.size(); i++)
         ll.push_back(n * log(residuals[i] / n));
 
     return ll;

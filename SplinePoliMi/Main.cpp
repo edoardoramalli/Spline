@@ -12,6 +12,20 @@ using namespace std;
 #include "Utilities.h"
 #include "ComputeSpline.h"
 
+/*
+                                TODO LIST
+
+1. abscissa e originalAbscissae: c'è differenza. Se non c'è elimina
+2. Ricorda che quando calcoli spline modello c'è da fare estensione e normalizzazione rispetto spline exp
+3. Cosa succede ai dati in input? ordinati? media?
+4. Pre-rimozione asintoti dai dati numerici --> Noi lo dobbiamo fare in python, teniamo un po di asintoto
+    Ma se lo teniamo puoi Spline.removeAsymptotes() lo rimuove lo stesso?
+5. FW (Future Work): Massimi? --> parabola + solo guardando dei pointi posso sapere se è un max o è un outlier
+6. FW: Filtraggio
+7. FW: Outlier detection. Calcolo spline con e senza outlier e magari utilizzo il modello
+
+*/
+
 
 /*
     x and y have to be sorted and without duplicates on the x-axis.
