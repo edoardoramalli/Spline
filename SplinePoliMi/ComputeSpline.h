@@ -1,3 +1,4 @@
+/* Generates the splines according to the splineTypes and number of points */
 vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineType) {
 
     vector<Spline> splines;
@@ -27,14 +28,11 @@ vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineTy
 }
 
 double summedSquaredError(vector <double> b, vector<double> c){
-
-    vector<double> SSE;
-
-    for(int i=0; i<b.size(); i++)
-        SSE.push_back(pow((b[i]-c[i]), 2));
-
-    return accumulate(SSE.begin(), SSE.end(), 0);
-
+    double SSE = 0;
+    for(int i=0; i<b.size(); i++){
+        SSE += pow((b[i]-c[i]), 2);
+    }
+    return SSE;
 }
 
 vector<double> logLikeliHood(double n, vector<double> residuals){
@@ -78,12 +76,15 @@ vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<
 
 }
 
+/* Return the index of the minimum element */
 int positionOfMinimum(vector<double> v){
-    return min_element(v.begin(),v.end()) - v.begin();
+    return min_element(v.begin(), v.end()) - v.begin();
 }
 
-int calculateBestSpline(vector<double> x, vector<double> y, string criterion, vector<Spline> splines){
+/* Given a vector of Splines return the best spline based on the criterion */
+int calculateBestSpline(vector<Spline> splines, string criterion){
 
+    // If the length of splines is 1 then the only spline is the best spline
     if (splines.size() == 1){
         return 0;
     }
@@ -98,15 +99,16 @@ int calculateBestSpline(vector<double> x, vector<double> y, string criterion, ve
     vector<vector<double>> information;
     vector<double> ratioLK;
     vector<double> k;
-    double numOfObs = x.size();
+    // The original X vector is in every Spline. I take it from the first one
+    int numOfObs = splines[0].originalAbscissae.size();
 
     int indexBestSpline;
 
     for (int k=0; k < splines.size(); k++){
         vector<double> ySpl_tmp;
-        for (int i=0; i<x.size();i++)
-            ySpl_tmp.push_back(splines[k].D0(x[i]));
-        SSE.push_back(summedSquaredError(y,ySpl_tmp));
+        for (int i=0; i < numOfObs;i++)
+            ySpl_tmp.push_back(splines[k].D0(splines[0].originalAbscissae[i]));
+        SSE.push_back(summedSquaredError(splines[0].originalOrdinates, ySpl_tmp));
     }
 
     ll = logLikeliHood(numOfObs,SSE);

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <numeric>
 #include <random>
 #include <iomanip>
 
@@ -10,16 +9,12 @@ using namespace std;
 #include "Settings.h"
 #include "BasisFunction.h"
 #include "Spline.h"
-
 #include "Utilities.h"
-
-
-
 #include "ComputeSpline.h"
 
 
 /*
-    x and y have to be sorted and without duplicates.
+    x and y have to be sorted and without duplicates on the x-axis.
 */
 extern "C"
 void compute_spline_cpp(double* x, double* y, int length, int splineType,
@@ -37,7 +32,6 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     vector<double> y_vector(y, y + length);
 
 
-
     // ----------  SET SETTINGS  ----------
 
     m = m_;
@@ -53,13 +47,11 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     criterion = string(criterion_);
 
 
-
     // ----------  COMPUTE BEST SPLINE  ----------
-
 
     vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, splineType);
 
-    int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
+    int index_best = calculateBestSpline(possibleSplines, criterion);
 
     Spline best_spline = possibleSplines[index_best];
 
@@ -68,6 +60,7 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     if(verbose){
         vector<vector<double>> tmp;
         cout << "Spline Type: " << splineType << endl;
+
         cout << "Original X: ";
         printV_inLine(x_vector);
         cout << "Original Y: ";
@@ -118,8 +111,6 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
 
     }
 
-
-
     // ----------  PASS BACK THE RESULTS  ----------
 
     *numberOfKnots = best_spline.numberOfKnots;
@@ -136,8 +127,6 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     for(int i = 0; i < best_spline.numberOfKnots; i++){
         knots[i] = best_spline.knots[i];
     }
-
-
 
     return;
 }
