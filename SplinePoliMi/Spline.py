@@ -173,10 +173,14 @@ class Spline:
         y_c = listToArray(self.y)
         numberOfKnots_c = c_int()
         numberOfPolynomials_c = c_int()
-        coeffD0_c = (len(self.x) * self.m * c_double)()
-        coeffD1_c = (len(self.x) * self.m * c_double)()
-        coeffD2_c = (len(self.x) * self.m * c_double)()
-        knots_c = (len(self.x) * c_double)()
+        # removeNegativeSegments() add knots, adding knots (we don't know a priori) change the size of coeff
+        # +5 it is just to be tolerant to 5 new knots
+        size_coeff_matrix = (len(self.x) * self.m) + 5
+        size_knots = len(self.x) + 5
+        coeffD0_c = (size_coeff_matrix * c_double)()
+        coeffD1_c = (size_coeff_matrix * c_double)()
+        coeffD2_c = (size_coeff_matrix * c_double)()
+        knots_c = (size_knots * c_double)()
 
         c_library.compute_spline_cpp(x_c,  # x
                                      y_c,  # y
@@ -237,6 +241,7 @@ class Spline:
 
     def evaluate(self, x, der: int = 0):
         """
+        TODO set warning if outside abscissae range
         :param x: x could be a float or int number or a list of them. evaluate the derivative of the spline in x.
         :param der: default 0. 0 means D0, 1 means D1 (first derivative), 2 means D2 (second derivative)
         :return: the evaluated derivative on the x-value(s) x

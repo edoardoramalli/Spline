@@ -310,8 +310,9 @@ void Spline::solve(const vector<double>& Abscissae,
 
     this->yAndAsymptoteAnalysis();
 
-    if (possibleNegativeOrdinates == false)
+    if (possibleNegativeOrdinates == false){
         this->removeNegativeSegments();
+    }
 
     this->findMaximaBetweenExtremes();
 
