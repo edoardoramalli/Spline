@@ -11,7 +11,8 @@ def listToArray(ll):
 
 class Spline:
     binariesFileName = 'SplineGenerator.o'
-    criterion_list = ["AIC","BIC","SSE"]
+    criterion_list = ["AIC", "BIC", "SSE"]
+    possibleSplineType = [0, 1]
 
     @staticmethod
     def compileBinaries(module_path, compiler='g++'):
@@ -22,29 +23,30 @@ class Spline:
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
 
     def checkSettings(self):
-
-        if not self.criterion in self.criterion_list:
+        if self.splineType not in self.possibleSplineType:
+            raise ValueError("The selected splineType doesn't exist")
+        if self.criterion not in self.criterion_list:
             raise ValueError("The selected criterion doesn't exist")
-        if self.m<=0:
+        if self.m <= 0:
             raise ValueError("m cannot be less or equal than zero")
-        if self.g<=0:
+        if self.g <= 0:
             raise ValueError("g cannot be less or equal than zero")
-        if self.lambdaSearchInterval<=0:
+        if self.lambdaSearchInterval <= 0:
             raise ValueError("lambdaSearchInterval cannot be less or equal than zero")
-        if self.numberOfStepsLambda<=0:
+        if self.numberOfStepsLambda <= 0:
             raise ValueError("numberOfStepsLambda cannot be less or equal than zero")
-        if self.numberOfRatiolkForAICcUse<=0:
+        if self.numberOfRatiolkForAICcUse <= 0:
             raise ValueError("numberOfRatiolkForAICcUse cannot be less or equal than zero")
         if not 0 <= self.fractionOfOrdinateRangeForAsymptoteIdentification <= 5:
             raise ValueError("fractionOfOrdinateRangeForAsymptoteIdentification cannot be less or equal than zero")
-        if self.fractionOfOrdinateRangeForMaximumIdentification<=0:
+        if self.fractionOfOrdinateRangeForMaximumIdentification <= 0:
             raise ValueError("fractionOfOrdinateRangeForMaximumIdentification cannot be less or equal than zero")
-        if self.graphPoints<=0:
+        if self.graphPoints <= 0:
             raise ValueError("graphPoints cannot be less or equal than zero")
-        
 
     def __init__(self, x: list, y: list,
                  verbose: bool = False,
+                 splineType: int = 0,
                  m: int = 4, g: int = 3, lambdaSearchInterval: int = 6, numberOfStepsLambda: int = 13,
                  numberOfRatiolkForAICcUse: int = 40, fractionOfOrdinateRangeForAsymptoteIdentification: float = 0.005,
                  fractionOfOrdinateRangeForMaximumIdentification: float = 0.025,
@@ -80,6 +82,7 @@ class Spline:
         self.removeAsymptotes = removeAsymptotes
         self.graphPoints = graphPoints
         self.criterion = criterion
+        self.splineType = splineType
 
         # Check settings
         self.checkSettings()
@@ -104,6 +107,7 @@ class Spline:
         c_library.compute_spline_cpp.argtypes = [c_void_p,  # x
                                                  c_void_p,  # y
                                                  c_int,  # length of x, y
+                                                 c_int,  # splineType
                                                  c_void_p,  # numberOfKnots
                                                  c_void_p,  # numberOfPolynomials
                                                  c_void_p,  # coeffDO
@@ -136,6 +140,7 @@ class Spline:
         c_library.compute_spline_cpp(x_c,  # x
                                      y_c,  # y
                                      c_int(len(self.x)),  # length of x, y
+                                     c_int(self.splineType),  # splineType
                                      pointer(numberOfKnots_c),  # numberOfKnots
                                      pointer(numberOfPolynomials_c),  # numberOfPolynomials
                                      pointer(coeffD0_c),  # coeffDO
