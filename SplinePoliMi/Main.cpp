@@ -9,17 +9,29 @@ using namespace std;
 #include "Settings.h"
 #include "BasisFunction.h"
 #include "Spline.h"
-
 #include "Utilities.h"
-
-
-
 #include "ComputeSpline.h"
 
+/*
+                                TODO LIST
+
+1. abscissa e originalAbscissae: c'è differenza. Se non c'è elimina
+2. Ricorda che quando calcoli spline modello c'è da fare estensione e normalizzazione rispetto spline exp
+3. Cosa succede ai dati in input? ordinati? media?
+4. Pre-rimozione asintoti dai dati numerici --> Noi lo dobbiamo fare in python, teniamo un po di asintoto
+    Ma se lo teniamo puoi Spline.removeAsymptotes() lo rimuove lo stesso?
+5. FW (Future Work): Massimi? --> parabola + solo guardando dei pointi posso sapere se è un max o è un outlier
+6. FW: Filtraggio
+7. FW: Outlier detection. Calcolo spline con e senza outlier e magari utilizzo il modello
+
+*/
 
 
+/*
+    x and y have to be sorted and without duplicates on the x-axis.
+*/
 extern "C"
-void compute_spline_cpp(double* x, double* y, int length,
+void compute_spline_cpp(double* x, double* y, int length, int splineType,
             int* numberOfKnots, int* numberOfPolynomials,
             double* coeffDO, double* coeffD1, double* coeffD2, double* knots,
             bool verbose,
@@ -32,9 +44,6 @@ void compute_spline_cpp(double* x, double* y, int length,
 
     vector<double> x_vector(x, x + length);
     vector<double> y_vector(y, y + length);
-
-
-
 
 
     // ----------  SET SETTINGS  ----------
@@ -52,13 +61,11 @@ void compute_spline_cpp(double* x, double* y, int length,
     criterion = string(criterion_);
 
 
-
     // ----------  COMPUTE BEST SPLINE  ----------
 
+    vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, splineType);
 
-    vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, true);
-
-    int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
+    int index_best = calculateBestSpline(possibleSplines, criterion);
 
     Spline best_spline = possibleSplines[index_best];
 
@@ -66,6 +73,7 @@ void compute_spline_cpp(double* x, double* y, int length,
     // ---------- VERBOSE ----------
     if(verbose){
         vector<vector<double>> tmp;
+        cout << "Spline Type: " << splineType << endl;
 
         cout << "Original X: ";
         printV_inLine(x_vector);
@@ -117,8 +125,6 @@ void compute_spline_cpp(double* x, double* y, int length,
 
     }
 
-
-
     // ----------  PASS BACK THE RESULTS  ----------
 
     *numberOfKnots = best_spline.numberOfKnots;
@@ -135,8 +141,6 @@ void compute_spline_cpp(double* x, double* y, int length,
     for(int i = 0; i < best_spline.numberOfKnots; i++){
         knots[i] = best_spline.knots[i];
     }
-
-
 
     return;
 }
