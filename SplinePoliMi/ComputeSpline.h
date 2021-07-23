@@ -46,7 +46,7 @@ vector<double> logLikeliHood(double n, vector<double> residuals){
 
 }
 
-vector<vector<double>> informationCriterion(vector<double> ll, double n, vector<int> numOfParam,vector<double> residuals){
+vector<vector<double>> informationCriterion(vector<double> ll, int n, vector<int> numOfParam){
 
     vector<vector<double>> information ;
     vector<double> AIC;
@@ -104,35 +104,37 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
 
     int indexBestSpline;
 
+    for (int k=0; k < splines.size(); k++){
+        vector<double> ySpl_tmp;
+        for (int i=0; i < numOfObs;i++){
+            ySpl_tmp.push_back(splines[k].D0(splines[0].originalAbscissae[i]));
+        }
+        SSE.push_back(summedSquaredError(splines[0].originalOrdinates, ySpl_tmp));
+    }
+
     ll = logLikeliHood(numOfObs,SSE);
 
     for(int i=0;i<splines.size();i++){
         numOfParam.push_back(splines[i].K);
     }
 
-    information = informationCriterion(ll,numOfObs,numOfParam,SSE);
+    information = informationCriterion(ll, numOfObs, numOfParam);
 
     AIC = information[0];
     AICc = information[1];
     BIC = information[2];
     k = information[3];
 
-    for (int i=0; i<k.size();i++){
-        ratioLK.push_back(k[i]/numOfObs);
-    }
 
     if (criterion == "SSE"){
-        for (int k=0; k < splines.size(); k++){
-            vector<double> ySpl_tmp;
-            for (int i=0; i < numOfObs;i++)
-                ySpl_tmp.push_back(splines[k].D0(splines[0].originalAbscissae[i]));
-            SSE.push_back(summedSquaredError(splines[0].originalOrdinates, ySpl_tmp));
-        }
         indexBestSpline = positionOfMinimum(SSE);
     }
 
     if (criterion == "AIC"){
-        for (int i=0; i<ratioLK.size(); i++){
+        for (int i=0; i<k.size();i++){
+            ratioLK.push_back(k[i] / numOfObs);
+        }
+        for (int i=0; i < ratioLK.size(); i++){
             if (ratioLK[i] <= numberOfRatiolkForAICcUse){
                 AICplusAICc.push_back(AICc[i]);
             }
@@ -142,6 +144,7 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
         }
         indexBestSpline = positionOfMinimum(AICplusAICc);
     }
+
 
     if (criterion == "BIC"){
         indexBestSpline = positionOfMinimum(BIC);
