@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <random>
 #include <iomanip>
 
@@ -17,9 +18,11 @@ using namespace std;
 #include "ComputeSpline.h"
 
 
-
+/*
+    x and y have to be sorted and without duplicates.
+*/
 extern "C"
-void compute_spline_cpp(double* x, double* y, int length,
+void compute_spline_cpp(double* x, double* y, int length, int splineType,
             int* numberOfKnots, int* numberOfPolynomials,
             double* coeffDO, double* coeffD1, double* coeffD2, double* knots,
             bool verbose,
@@ -32,8 +35,6 @@ void compute_spline_cpp(double* x, double* y, int length,
 
     vector<double> x_vector(x, x + length);
     vector<double> y_vector(y, y + length);
-
-
 
 
 
@@ -56,7 +57,7 @@ void compute_spline_cpp(double* x, double* y, int length,
     // ----------  COMPUTE BEST SPLINE  ----------
 
 
-    vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, true);
+    vector<Spline> possibleSplines = calculateSplines(x_vector, y_vector, splineType);
 
     int index_best = calculateBestSpline(x_vector, y_vector, criterion, possibleSplines);
 
@@ -66,7 +67,7 @@ void compute_spline_cpp(double* x, double* y, int length,
     // ---------- VERBOSE ----------
     if(verbose){
         vector<vector<double>> tmp;
-
+        cout << "Spline Type: " << splineType << endl;
         cout << "Original X: ";
         printV_inLine(x_vector);
         cout << "Original Y: ";
