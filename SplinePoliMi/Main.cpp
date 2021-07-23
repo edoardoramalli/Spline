@@ -16,8 +16,10 @@ using namespace std;
                                 TODO LIST
 
 1. abscissa e originalAbscissae: c'è differenza. Se non c'è elimina
+    --> originalAbscissae accesso solo in lettura, abscissa viene modificata ed usata per calcolare knots
 2. Ricorda che quando calcoli spline modello c'è da fare estensione e normalizzazione rispetto spline exp
 3. Cosa succede ai dati in input? ordinati? media?
+    --> Ordinati, media, media errori, rimozione asintoti (non solo roba a 0) Riga 670 Indexes.h originale
 4. Pre-rimozione asintoti dai dati numerici --> Noi lo dobbiamo fare in python, teniamo un po di asintoto
     Ma se lo teniamo puoi Spline.removeAsymptotes() lo rimuove lo stesso?
 5. FW (Future Work): Massimi? --> parabola + solo guardando dei pointi posso sapere se è un max o è un outlier
