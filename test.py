@@ -2,34 +2,27 @@ from SplinePoliMi import Spline
 import matplotlib.pyplot as plt
 import numpy as np
 from time import time
-import statistics
 
-x = [1, 2, 3, 4, 5, ]
-y = [1, 4, 16, 4, 1,]
 
+x = [6, 2, 3, 4, 5, 5, 6]
+y = [1, 4, 16, 4, 1, 2, 1]
 
 start_creation = time()
 spline = Spline(x=x, y=y, verbose=False)
 end_creation = time() - start_creation
 
 ticks = np.linspace(0, 5, 5000)
-y_ticks = []
-y1_ticks = []
-y2_ticks = []
 
-times_eval = []
 
-for t in ticks:
-    start_eval = time()
-    v = spline.evaluate(t)
-    end_eval = time() - start_eval
-    times_eval.append(end_eval)
-    y_ticks.append(v)
-    y1_ticks.append(spline.evaluate(t, der=1))
-    y2_ticks.append(spline.evaluate(t, der=2))
+start_eval = time()
+y_ticks = spline.evaluate(ticks, der=0)
+y1_ticks = spline.evaluate(ticks, der=1)
+y2_ticks = spline.evaluate(ticks, der=2)
+end_eval = time() - start_eval
+
 
 print('Tempo Creazione Spline:', end_creation)
-print('Tempo Medio D0:', statistics.mean(times_eval))
+print('Tempo Medio D0:', end_eval)
 
 # Senza flag compilatore
 # Tempo Creazione Spline: 0.0036389827728271484

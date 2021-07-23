@@ -56,6 +56,7 @@ setup(
         "Topic :: Scientific/Engineering",
 
     ],
+    python_requires='>=3.7',
     include_package_data=True,
     package_data={
         'SplinePoliMi': ['*.h', '*.cpp'],

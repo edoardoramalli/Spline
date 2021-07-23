@@ -3,6 +3,7 @@ import numpy as np
 import sys
 import os
 import subprocess
+from statistics import mean
 
 
 def listToArray(ll):
@@ -44,6 +45,30 @@ class Spline:
         if self.graphPoints <= 0:
             raise ValueError("graphPoints cannot be less or equal than zero")
 
+    def filterInputData(self):
+        """
+        Filter the x, y in input.
+        Set originalX and originalY s.t. originalX has unique values and its sorted
+        """
+        if len(self.originalX) != len(self.originalY):
+            raise ValueError('X and Y have different lengths!')
+
+        if len(self.originalX) <= 1:
+            raise ValueError('X and Y need more points!')
+
+        # TODO do this stuff in python or in c++?
+
+        diz_data = {}
+
+        for index, i in enumerate(self.originalX):
+            diz_data[i] = diz_data.get(i, []) + [self.originalY[index]]
+
+        # Dicts preserve insertion order in Python 3.7+
+        # Ensure unique (do the average in case) and sorted x
+        diz_data = {k: mean(v) for k, v in sorted(diz_data.items(), key=lambda item: item[0])}
+
+        self.x, self.y = list(diz_data.keys()), list(diz_data.values())
+
     def __init__(self, x: list, y: list,
                  verbose: bool = False,
                  splineType: int = 0,
@@ -53,20 +78,36 @@ class Spline:
                  possibleNegativeOrdinates: bool = False, removeAsymptotes: bool = True, graphPoints: int = 500,
                  criterion: str = 'AIC'
                  ):
+        """
 
+        :param x: input x-values
+        :param y: input y-values
+        :param verbose: default is False. If True, ask to the c++ library to print input data, settings, coefficients
+        and evaluate D0, D1, D2 in #graphPoints equidistant x-values from the first knots to the last knots
+        :param splineType: default 0. 0 means experimental data, 1 means model data. TODO Explain better
+        :param m:
+        :param g:
+        :param lambdaSearchInterval:
+        :param numberOfStepsLambda:
+        :param numberOfRatiolkForAICcUse:
+        :param fractionOfOrdinateRangeForAsymptoteIdentification:
+        :param fractionOfOrdinateRangeForMaximumIdentification:
+        :param possibleNegativeOrdinates:
+        :param removeAsymptotes:
+        :param graphPoints:
+        :param criterion:
+        """
         self.module_path = os.path.dirname(sys.modules[self.__module__].__file__)
 
         if not os.path.isfile(os.path.join(self.module_path, self.binariesFileName)):
             self.compileBinaries(module_path=self.module_path)
 
-        if len(x) != len(y):
-            raise ValueError('X and Y have different lengths!')
-
-        if len(x) <= 1:
-            raise ValueError('X and Y need more points!')
-
-        # Input x,y has to be sorted by x
-        self.x, self.y = zip(*sorted(zip(x, y)))
+        # Manage Input Data
+        self.originalX = x
+        self.originalY = y
+        self.x = None
+        self.y = None
+        self.filterInputData()
 
         self.verbose = verbose
 
@@ -84,7 +125,7 @@ class Spline:
         self.criterion = criterion
         self.splineType = splineType
 
-        # Check settings
+        # Check Settings
         self.checkSettings()
 
         # Backwards
@@ -174,6 +215,7 @@ class Spline:
         self.knots = np.array(knots_c[0: self.numberOfKnots])
 
     def compute(self, x, k, coeff):
+        # TODO ctyhon immplementation?
         indexOfPolynomial = 0
 
         for i in range(0, self.numberOfKnots - 1):
@@ -193,9 +235,17 @@ class Spline:
 
         return y_val
 
-    def evaluate(self, x: int, der: int = 0):
+    def evaluate(self, x, der: int = 0):
+        """
+        :param x: x could be a float or int number or a list of them. evaluate the derivative of the spline in x.
+        :param der: default 0. 0 means D0, 1 means D1 (first derivative), 2 means D2 (second derivative)
+        :return: the evaluated derivative on the x-value(s) x
+        """
         if not any([self.numberOfKnots, self.knots, self.m, self.coeffD0, self.coeffD1, self.coeffD2]):
             raise ValueError('Spline is not computed yet!')
+        # numpy.float64 etc..?
+        # if not any([(lambda element: type(element) == float or type(element) == int)(e) for e in x]):
+        #     raise ValueError('Value of x is not valid!')
         if der == 0:
             k = self.m
             coeff = self.coeffD0
@@ -207,4 +257,4 @@ class Spline:
             coeff = self.coeffD2
         else:
             raise ValueError('Derivative does not exists!')
-        return self.compute(x=x, k=k, coeff=coeff)
+        return self.compute(x, k, coeff) if not hasattr(x, '__iter__') else [self.compute(e, k, coeff) for e in x]
