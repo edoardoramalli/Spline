@@ -42,7 +42,7 @@ def copy_dir():
 
 setup(
     name="SplinePoliMi",
-    version="0.0.0.4",
+    version="0.0.0.6",
     author="Edoardo Ramalli, Timoteo Dinelli",
     author_email="edoardo.ramalli@polimi.it",
     description="Spline generation",

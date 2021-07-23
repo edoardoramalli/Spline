@@ -15,7 +15,7 @@ class Spline:
     @staticmethod
     def compileBinaries(module_path, compiler='g++'):
         print('Compiling binaries...')
-        flags_compiler = '-std=c++17 -O3 -Wall -DNDEBUG'
+        flags_compiler = '-std=c++17 -shared -fPIC -O3 -Wall -DNDEBUG'
         input_main = os.path.join(module_path, 'main.cpp')
         output_exec = os.path.join(module_path, Spline.binariesFileName)
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
