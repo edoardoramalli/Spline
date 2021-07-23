@@ -11,6 +11,7 @@ def listToArray(ll):
 
 class Spline:
     binariesFileName = 'SplineGenerator.o'
+    criterion_list = ["AIC","BIC","SSE"]
 
     @staticmethod
     def compileBinaries(module_path, compiler='g++'):
@@ -21,8 +22,26 @@ class Spline:
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
 
     def checkSettings(self):
-        # TODO inserire controlli settings in ingresso
-        pass
+
+        if not self.criterion in self.criterion_list:
+            raise ValueError("The selected criterion doesn't exist")
+        if self.m<=0:
+            raise ValueError("m cannot be less or equal than zero")
+        if self.g<=0:
+            raise ValueError("g cannot be less or equal than zero")
+        if self.lambdaSearchInterval<=0:
+            raise ValueError("lambdaSearchInterval cannot be less or equal than zero")
+        if self.numberOfStepsLambda<=0:
+            raise ValueError("numberOfStepsLambda cannot be less or equal than zero")
+        if self.numberOfRatiolkForAICcUse<=0:
+            raise ValueError("numberOfRatiolkForAICcUse cannot be less or equal than zero")
+        if not 0 <= self.fractionOfOrdinateRangeForAsymptoteIdentification <= 5:
+            raise ValueError("fractionOfOrdinateRangeForAsymptoteIdentification cannot be less or equal than zero")
+        if self.fractionOfOrdinateRangeForMaximumIdentification<=0:
+            raise ValueError("fractionOfOrdinateRangeForMaximumIdentification cannot be less or equal than zero")
+        if self.graphPoints<=0:
+            raise ValueError("graphPoints cannot be less or equal than zero")
+        
 
     def __init__(self, x: list, y: list,
                  verbose: bool = False,
@@ -61,6 +80,9 @@ class Spline:
         self.removeAsymptotes = removeAsymptotes
         self.graphPoints = graphPoints
         self.criterion = criterion
+
+        # Check settings
+        self.checkSettings()
 
         # Backwards
         self.numberOfKnots = None
