@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 from statistics import mean
+from .CLibrary import CLibrary
 
 
 def listToArray(ll):
@@ -141,7 +142,10 @@ class Spline:
 
     def computeSpline(self):
         try:
-            c_library = cdll.LoadLibrary(os.path.join(self.module_path, self.binariesFileName))
+            # c_library = cdll.LoadLibrary(os.path.join(self.module_path, self.binariesFileName))
+            # c_library = CDLL(os.path.join(self.module_path, self.binariesFileName))
+
+            c_library = CLibrary(os.path.join(self.module_path, self.binariesFileName))
         except OSError:
             raise OSError("Unable to load the system C library")
 
@@ -217,6 +221,8 @@ class Spline:
         self.coeffD2 = np.reshape(np.array(coeffD2_c[0: self.m * self.numberOfPolynomials]),
                                   (self.numberOfPolynomials, self.m))
         self.knots = np.array(knots_c[0: self.numberOfKnots])
+
+        del c_library
 
     def compute(self, x, k, coeff):
         # TODO ctyhon immplementation?

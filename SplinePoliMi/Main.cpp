@@ -144,6 +144,9 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
         knots[i] = best_spline.knots[i];
     }
 
+    possibleSplines.clear();
+    possibleSplines.shrink_to_fit();
+
     return;
 }
 

@@ -6,14 +6,13 @@ from setuptools.command.install import install
 import subprocess
 import sys
 
-
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
 def custom_command():
-    subprocess.check_call('g++ -std=c++17  ./SplinePoliMi/Main.cpp -o ./SplinePoliMi/SplineGenerator.o -O3 -Wall -DNDEBUG', shell=True)
+    subprocess.check_call(
+        'g++ -std=c++17  ./SplinePoliMi/Main.cpp -o ./SplinePoliMi/SplineGenerator.o -O3 -Wall -DNDEBUG', shell=True)
 
 
 class CustomInstallCommand(install):
@@ -33,6 +32,7 @@ class CustomEggInfoCommand(egg_info):
         egg_info.run(self)
         custom_command()
 
+
 def copy_dir():
     dir_path = 'C++_Library'
     base_dir = os.path.join('MODULE_DIR_HERE', dir_path)
@@ -40,9 +40,10 @@ def copy_dir():
         for f in files:
             yield os.path.join(dirpath.split('/', 1)[1], f)
 
+
 setup(
     name="SplinePoliMi",
-    version="0.0.0.6",
+    version="0.0.0.8",
     author="Edoardo Ramalli, Timoteo Dinelli",
     author_email="edoardo.ramalli@polimi.it",
     description="Spline generation",

@@ -14,3 +14,5 @@ dist/
 SplineGenerator.o
 
 *.o
+
+test.py
