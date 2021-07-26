@@ -130,7 +130,7 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
 
     // ----------  PASS BACK THE RESULTS  ----------
 
-    *numberOfKnots = best_spline.numberOfKnots;
+    *numberOfKnots = best_spline.knots.size();
     *numberOfPolynomials = best_spline.numberOfPolynomials;
 
     for(int i = 0; i < (int)best_spline.coeffD0.size(); i++){
@@ -141,7 +141,7 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
         }
     }
 
-    for(int i = 0; i < best_spline.numberOfKnots; i++){
+    for(int i = 0; i < (int)best_spline.knots.size(); i++){
         knots[i] = best_spline.knots[i];
     }
 

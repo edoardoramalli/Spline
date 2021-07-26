@@ -6,16 +6,16 @@ import subprocess
 from statistics import mean
 from .CLibrary import CLibrary
 from copy import deepcopy
-from threading import Thread
 
 c_float_p = POINTER(c_double)
+
 
 def listToArray(ll):
     return (c_double * len(ll))(*ll)
 
 
 class Spline:
-    moduleVersion = '_0.0.0.8'
+    moduleVersion = '_0.0.0.9'
     binariesFileName = f'SplineGenerator{moduleVersion}.o'
     criterion_list = ["AIC", "BIC", "SSE"]
     possibleSplineType = [0, 1]
@@ -124,8 +124,6 @@ class Spline:
         self.numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse
         self.fractionOfOrdinateRangeForAsymptoteIdentification = fractionOfOrdinateRangeForAsymptoteIdentification
         self.fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification
-        # self.possibleNegativeOrdinates = possibleNegativeOrdinates
-        # self.removeAsymptotes = removeAsymptotes
         self.graphPoints = graphPoints
         self.criterion = criterion
         self.splineType = splineType
@@ -134,7 +132,6 @@ class Spline:
         self.checkSettings()
 
         # Backwards
-        self.numberOfKnots = None
         self.numberOfPolynomials = None
         self.knots = None
         self.coeffD0 = None
@@ -142,15 +139,13 @@ class Spline:
         self.coeffD2 = None
 
         # Start
-        p = Thread(target=self.computeSpline)
-        p.start()
-        p.join()
+        self.computeSpline()
+
+        if not possibleNegativeOrdinates:
+            self.removeNegativeSegments()
 
     def computeSpline(self):
         try:
-            # c_library = cdll.LoadLibrary(os.path.join(self.module_path, self.binariesFileName))
-            # c_library = CDLL(os.path.join(self.module_path, self.binariesFileName))
-
             c_library = CLibrary(os.path.join(self.module_path, self.binariesFileName))
         except OSError:
             raise OSError("Unable to load the system C library")
@@ -183,12 +178,12 @@ class Spline:
 
         x_c = listToArray(self.x)
         y_c = listToArray(self.y)
+        # TODO se non cambiano i nodi (tolti o aggiunti) si può conoscere numberOfKnots e si può togliere!
         numberOfKnots_c = c_int()
         numberOfPolynomials_c = c_int()
-        # removeNegativeSegments() add knots, adding knots (we don't know a priori) change the size of coeff
-        # +5 it is just to be tolerant to 5 new knots
-        size_coeff_matrix = (len(self.x) * self.m) + 5
-        size_knots = len(self.x) + 5
+
+        size_coeff_matrix = (len(self.x) * self.m)
+        size_knots = len(self.x)
 
         coeffD0_c = [0] * size_coeff_matrix
         coeffD1_c = [0] * size_coeff_matrix
@@ -229,7 +224,6 @@ class Spline:
                                      c_char_p(self.criterion.encode('utf-8')),  # criterion
                                      )
 
-        self.numberOfKnots = numberOfKnots_c.value
         self.numberOfPolynomials = numberOfPolynomials_c.value
         self.coeffD0 = np.reshape(np.array(deepcopy(coeffD0_c[0: self.m * self.numberOfPolynomials])),
                                   (self.numberOfPolynomials, self.m))
@@ -237,7 +231,7 @@ class Spline:
                                   (self.numberOfPolynomials, self.m))
         self.coeffD2 = np.reshape(np.array(deepcopy(coeffD2_c[0: self.m * self.numberOfPolynomials])),
                                   (self.numberOfPolynomials, self.m))
-        self.knots = np.array(deepcopy(knots_c[0: self.numberOfKnots]))
+        self.knots = np.array(deepcopy(knots_c[0: numberOfKnots_c.value]))
 
         # Free Memory
         del x_c
@@ -255,7 +249,7 @@ class Spline:
         # TODO ctyhon immplementation?
         indexOfPolynomial = 0
 
-        for i in range(0, self.numberOfKnots - 1):
+        for i in range(0, len(self.knots) - 1):
             if x > self.knots[i]:
                 indexOfPolynomial = i
             else:
@@ -279,7 +273,7 @@ class Spline:
         :param der: default 0. 0 means D0, 1 means D1 (first derivative), 2 means D2 (second derivative)
         :return: the evaluated derivative on the x-value(s) x
         """
-        if not any([self.numberOfKnots, self.knots, self.m, self.coeffD0, self.coeffD1, self.coeffD2]):
+        if not any([len(self.knots), self.m, self.coeffD0, self.coeffD1, self.coeffD2]):
             raise ValueError('Spline is not computed yet!')
         # numpy.float64 etc..?
         # if not any([(lambda element: type(element) == float or type(element) == int)(e) for e in x]):
@@ -297,7 +291,40 @@ class Spline:
             raise ValueError('Derivative does not exists!')
         return self.compute(x, k, coeff) if not hasattr(x, '__iter__') else [self.compute(e, k, coeff) for e in x]
 
-        def removeAsymptotes(self):
-            pass
-        def removeNegativeSegments(self):
-            pass
+    def removeAsymptotes(self):
+        pass
+
+    def removeNegativeSegments(self):
+
+        roots = []
+
+        for i in range(self.numberOfPolynomials):
+            # TODO capire cosa accade se m > 3
+            a0 = self.coeffD0[i][3]
+            b0 = self.coeffD0[i][2]
+            c0 = self.coeffD0[i][1]
+            d0 = self.coeffD0[i][0]
+            roots += list(np.roots([a0, b0, c0, d0]))
+
+        for root in roots:
+            if not np.iscomplex(root):
+                index = 0
+                root = float(np.real(root))
+                for index_knots in range(len(self.knots)):
+                    if root < self.knots[index_knots]:
+                        break
+                    else:
+                        index += 1
+                if 1 <= index < len(self.knots):
+                    self.knots = np.insert(self.knots, index, root)
+                    self.coeffD0 = np.insert(self.coeffD0, index, self.coeffD0[index - 1], axis=0)
+                    self.coeffD1 = np.insert(self.coeffD1, index, self.coeffD1[index - 1], axis=0)
+                    self.coeffD2 = np.insert(self.coeffD2, index, self.coeffD2[index - 1], axis=0)
+
+        for index_knot in range(len(self.knots) - 1):
+            midpoint = (self.knots[index_knot] + self.knots[index_knot + 1]) / 2.0
+            if self.evaluate(midpoint, der=0) <= 0:
+                zeros = np.zeros(self.m)
+                self.coeffD0[index_knot] = zeros
+                self.coeffD1[index_knot] = zeros
+                self.coeffD2[index_knot] = zeros
