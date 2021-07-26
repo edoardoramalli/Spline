@@ -16,3 +16,5 @@ SplineGenerator.o
 *.o
 
 test.py
+
+*.pdf
