@@ -40,11 +40,11 @@ double fractionOfOrdinateRangeForMaximumIdentification;
 /* Specifies whether negative segments on the y-axis are admissible for the
 splines or whether they should be replaced with straight lines with ordinate 0
 */
-bool possibleNegativeOrdinates;
+//bool possibleNegativeOrdinates;
 
 
 /**/
-bool removeAsymptotes;
+//bool removeAsymptotes;
 
 /* Pascal's triangle */
 vector<vector<double>> pascalsTriangle;

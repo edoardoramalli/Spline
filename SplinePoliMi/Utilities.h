@@ -27,8 +27,8 @@ void printSettings(){
     cout << "numberOfRatiolkForAICcUse:  " << numberOfRatiolkForAICcUse << endl;
     cout << "fractionOfOrdinateRangeForAsymptoteIdentification:  " << fractionOfOrdinateRangeForAsymptoteIdentification << endl;
     cout << "fractionOfOrdinateRangeForMaximumIdentification:  " << fractionOfOrdinateRangeForMaximumIdentification << endl;
-    cout << "possibleNegativeOrdinates:  " << possibleNegativeOrdinates << endl;
-    cout << "removeAsymptotes:  " << removeAsymptotes << endl;
+//    cout << "possibleNegativeOrdinates:  " << possibleNegativeOrdinates << endl;
+//    cout << "removeAsymptotes:  " << removeAsymptotes << endl;
     cout << "graphPoints:  " << graphPoints << endl;
     cout << "criterion:  " << criterion << endl;
 

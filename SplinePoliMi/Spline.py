@@ -124,8 +124,8 @@ class Spline:
         self.numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse
         self.fractionOfOrdinateRangeForAsymptoteIdentification = fractionOfOrdinateRangeForAsymptoteIdentification
         self.fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification
-        self.possibleNegativeOrdinates = possibleNegativeOrdinates
-        self.removeAsymptotes = removeAsymptotes
+        # self.possibleNegativeOrdinates = possibleNegativeOrdinates
+        # self.removeAsymptotes = removeAsymptotes
         self.graphPoints = graphPoints
         self.criterion = criterion
         self.splineType = splineType
@@ -173,8 +173,8 @@ class Spline:
                                                  c_int,  # numberOfRatiolkForAICcUse
                                                  c_double,  # fractionOfOrdinateRangeForAsymptoteIdentification
                                                  c_double,  # fractionOfOrdinateRangeForMaximumIdentification
-                                                 c_bool,  # possibleNegativeOrdinates
-                                                 c_bool,  # removeAsymptotes
+                                                 # c_bool,  # possibleNegativeOrdinates
+                                                 # c_bool,  # removeAsymptotes
                                                  c_int,  # graphPoints
                                                  c_char_p,  # criterion
                                                  ]
@@ -223,8 +223,8 @@ class Spline:
                                      # fractionOfOrdinateRangeForAsymptoteIdentification
                                      c_double(self.fractionOfOrdinateRangeForMaximumIdentification),
                                      # fractionOfOrdinateRangeForMaximumIdentification
-                                     c_bool(self.possibleNegativeOrdinates),  # possibleNegativeOrdinates
-                                     c_bool(self.removeAsymptotes),  # removeAsymptotes
+                                     # c_bool(self.possibleNegativeOrdinates),  # possibleNegativeOrdinates
+                                     # c_bool(self.removeAsymptotes),  # removeAsymptotes
                                      c_int(self.graphPoints),  # graphPoints
                                      c_char_p(self.criterion.encode('utf-8')),  # criterion
                                      )

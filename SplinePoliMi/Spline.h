@@ -457,120 +457,120 @@ double Spline::D1Shift(const vector<double>& powersOfX) {
 }
 
 
-
-void Spline::extendSpline(double lengthLeftSide, double lengthRightSide) {
-
-    double D0Left = this->D0(knots[0]);
-    double D0Right = this->D0(knots.back());
-
-    double D1Left;
-    double D1Right;
-    calculateSlopeAtEndPoints(D1Left,D1Right);
-
-    double knotLeft = knots[0];
-    double knotRight = knots.back();
-
-    auto segment = vector<double>(m,0);
-
-    if (possibleNegativeOrdinates) {
-
-        // Adds a diagonal line at the left of the spline
-        if (lengthLeftSide > 0) {
-            knots.insert(knots.begin(),knotLeft-lengthLeftSide);
-            coeffD0.insert(coeffD0.begin(),segment);
-            coeffD1.insert(coeffD1.begin(),segment);
-            coeffD2.insert(coeffD2.begin(),segment);
-            coeffD0[0][0] = D0Left-D1Left*knots[1];
-            coeffD0[0][1] = D1Left;
-            coeffD1[0][0] = D1Left;
-        }
-
-        // Adds a diagonal line at the right of the spline
-        if (lengthRightSide > 0) {
-            knots.push_back(knotRight+lengthRightSide);
-            coeffD0.push_back(segment);
-            coeffD1.push_back(segment);
-            coeffD2.push_back(segment);
-            coeffD0.back()[0] = D0Right-D1Right*knots[knots.size()-2];
-            coeffD0.back()[1] = D1Right;
-            coeffD1.back()[0] = D1Right;
-        }
-
-    }
-
-    if (!possibleNegativeOrdinates) {
-
-        // Adds a diagonal line at the left of the spline
-        if (lengthLeftSide > 0)
-            if (D0Left > 0) {
-                knots.insert(knots.begin(),knotLeft-lengthLeftSide);
-                coeffD0.insert(coeffD0.begin(),segment);
-                coeffD1.insert(coeffD1.begin(),segment);
-                coeffD2.insert(coeffD2.begin(), segment);
-                coeffD0[0][0] = D0Left-D1Left*knots[1];
-                coeffD0[0][1] = D1Left;
-                coeffD1[0][0] = D1Left;
-            }
-
-        // Adds a diagonal line at the right of the spline
-        if (lengthRightSide > 0)
-            if (D0Right > 0) {
-                knots.push_back(knotRight+lengthRightSide);
-                coeffD0.push_back(segment);
-                coeffD1.push_back(segment);
-                coeffD2.push_back(segment);
-                coeffD0.back()[0] = D0Right-D1Right*knots[knots.size()-2];
-                coeffD0.back()[1] = D1Right;
-                coeffD1.back()[0] = D1Right;
-            }
-
-        // Adds a horizontal line with ordinate 0 at the left of the spline
-        if (lengthLeftSide > 0) {
-            if (D0Left > 0) {
-                double yFirstPoint = coeffD0[0][0]+coeffD0[0][1]*knots[0];
-                if (yFirstPoint < 0) {
-                    knots[0] = -coeffD0[0][0]/coeffD0[0][1];
-                    knots.insert(knots.begin(),knotLeft-lengthLeftSide);
-                    coeffD0.insert(coeffD0.begin(),segment);
-                    coeffD1.insert(coeffD1.begin(),segment);
-                    coeffD2.insert(coeffD2.begin(), segment);
-                }
-            }
-            else if (D0Left == 0) {
-                knots.insert(knots.begin(),knotLeft-lengthLeftSide);
-                coeffD0.insert(coeffD0.begin(),segment);
-                coeffD1.insert(coeffD1.begin(),segment);
-                coeffD2.insert(coeffD2.begin(), segment);
-            }
-        }
-
-        // Adds a horizontal line with ordinate 0 at the right of the spline
-        if (lengthRightSide > 0) {
-            if (D0Right > 0) {
-                int i = coeffD0.size()-1;
-                double yLastPoint = coeffD0[i][0]+coeffD0[i][1]*knots[i+1];
-                if (yLastPoint < 0) {
-                    knots[i+1] = -coeffD0[i][0]/coeffD0[i][1];
-                    knots.push_back(knotRight+lengthRightSide);
-                    coeffD0.push_back(segment);
-                    coeffD1.push_back(segment);
-                    coeffD2.push_back(segment);
-                }
-            }
-            else if (D0Right == 0) {
-                knots.push_back(knotRight+lengthRightSide);
-                coeffD0.push_back(segment);
-                coeffD1.push_back(segment);
-                coeffD2.push_back(segment);
-            }
-        }
-
-    }
-
-    this->updateVariables();
-
-}
-
+//
+//void Spline::extendSpline(double lengthLeftSide, double lengthRightSide) {
+//
+//    double D0Left = this->D0(knots[0]);
+//    double D0Right = this->D0(knots.back());
+//
+//    double D1Left;
+//    double D1Right;
+//    calculateSlopeAtEndPoints(D1Left,D1Right);
+//
+//    double knotLeft = knots[0];
+//    double knotRight = knots.back();
+//
+//    auto segment = vector<double>(m,0);
+//
+//    if (possibleNegativeOrdinates) {
+//
+//        // Adds a diagonal line at the left of the spline
+//        if (lengthLeftSide > 0) {
+//            knots.insert(knots.begin(),knotLeft-lengthLeftSide);
+//            coeffD0.insert(coeffD0.begin(),segment);
+//            coeffD1.insert(coeffD1.begin(),segment);
+//            coeffD2.insert(coeffD2.begin(),segment);
+//            coeffD0[0][0] = D0Left-D1Left*knots[1];
+//            coeffD0[0][1] = D1Left;
+//            coeffD1[0][0] = D1Left;
+//        }
+//
+//        // Adds a diagonal line at the right of the spline
+//        if (lengthRightSide > 0) {
+//            knots.push_back(knotRight+lengthRightSide);
+//            coeffD0.push_back(segment);
+//            coeffD1.push_back(segment);
+//            coeffD2.push_back(segment);
+//            coeffD0.back()[0] = D0Right-D1Right*knots[knots.size()-2];
+//            coeffD0.back()[1] = D1Right;
+//            coeffD1.back()[0] = D1Right;
+//        }
+//
+//    }
+//
+//    if (!possibleNegativeOrdinates) {
+//
+//        // Adds a diagonal line at the left of the spline
+//        if (lengthLeftSide > 0)
+//            if (D0Left > 0) {
+//                knots.insert(knots.begin(),knotLeft-lengthLeftSide);
+//                coeffD0.insert(coeffD0.begin(),segment);
+//                coeffD1.insert(coeffD1.begin(),segment);
+//                coeffD2.insert(coeffD2.begin(), segment);
+//                coeffD0[0][0] = D0Left-D1Left*knots[1];
+//                coeffD0[0][1] = D1Left;
+//                coeffD1[0][0] = D1Left;
+//            }
+//
+//        // Adds a diagonal line at the right of the spline
+//        if (lengthRightSide > 0)
+//            if (D0Right > 0) {
+//                knots.push_back(knotRight+lengthRightSide);
+//                coeffD0.push_back(segment);
+//                coeffD1.push_back(segment);
+//                coeffD2.push_back(segment);
+//                coeffD0.back()[0] = D0Right-D1Right*knots[knots.size()-2];
+//                coeffD0.back()[1] = D1Right;
+//                coeffD1.back()[0] = D1Right;
+//            }
+//
+//        // Adds a horizontal line with ordinate 0 at the left of the spline
+//        if (lengthLeftSide > 0) {
+//            if (D0Left > 0) {
+//                double yFirstPoint = coeffD0[0][0]+coeffD0[0][1]*knots[0];
+//                if (yFirstPoint < 0) {
+//                    knots[0] = -coeffD0[0][0]/coeffD0[0][1];
+//                    knots.insert(knots.begin(),knotLeft-lengthLeftSide);
+//                    coeffD0.insert(coeffD0.begin(),segment);
+//                    coeffD1.insert(coeffD1.begin(),segment);
+//                    coeffD2.insert(coeffD2.begin(), segment);
+//                }
+//            }
+//            else if (D0Left == 0) {
+//                knots.insert(knots.begin(),knotLeft-lengthLeftSide);
+//                coeffD0.insert(coeffD0.begin(),segment);
+//                coeffD1.insert(coeffD1.begin(),segment);
+//                coeffD2.insert(coeffD2.begin(), segment);
+//            }
+//        }
+//
+//        // Adds a horizontal line with ordinate 0 at the right of the spline
+//        if (lengthRightSide > 0) {
+//            if (D0Right > 0) {
+//                int i = coeffD0.size()-1;
+//                double yLastPoint = coeffD0[i][0]+coeffD0[i][1]*knots[i+1];
+//                if (yLastPoint < 0) {
+//                    knots[i+1] = -coeffD0[i][0]/coeffD0[i][1];
+//                    knots.push_back(knotRight+lengthRightSide);
+//                    coeffD0.push_back(segment);
+//                    coeffD1.push_back(segment);
+//                    coeffD2.push_back(segment);
+//                }
+//            }
+//            else if (D0Right == 0) {
+//                knots.push_back(knotRight+lengthRightSide);
+//                coeffD0.push_back(segment);
+//                coeffD1.push_back(segment);
+//                coeffD2.push_back(segment);
+//            }
+//        }
+//
+//    }
+//
+//    this->updateVariables();
+//
+//}
+//
 
 
 void Spline::calculateShift(double Shift) {

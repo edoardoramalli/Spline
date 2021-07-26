@@ -39,7 +39,9 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
             bool verbose,
             int m_, int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
             double fractionOfOrdinateRangeForAsymptoteIdentification_, double fractionOfOrdinateRangeForMaximumIdentification_,
-            bool possibleNegativeOrdinates_, bool removeAsymptotes_, int graphPoints_, char* criterion_){
+                         int graphPoints_, char* criterion_){
+//            bool possibleNegativeOrdinates_, bool removeAsymptotes_,
+
 
     // ----------  SET VARIABLE  ----------
 
@@ -56,8 +58,8 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
     numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse_;
     fractionOfOrdinateRangeForAsymptoteIdentification = fractionOfOrdinateRangeForAsymptoteIdentification_;
     fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification_;
-    possibleNegativeOrdinates = possibleNegativeOrdinates_;
-    removeAsymptotes = removeAsymptotes_;
+//    possibleNegativeOrdinates = possibleNegativeOrdinates_;
+//    removeAsymptotes = removeAsymptotes_;
     graphPoints = graphPoints_;
     criterion = string(criterion_);
 
