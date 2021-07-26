@@ -129,10 +129,6 @@ public:
                int splineType,
                int numberOfAbscissaeSeparatingConsecutiveKnots);
 
-    /* Removes any horizontal asymptotes on the left and on the right of the
-    spline */
-    void removeAsymptotes();
-
     /* Calculates the ordinate of the spline at position x on the x-axis */
     double D0(double x);
 
@@ -261,10 +257,6 @@ private:
     /* Looks for horizontal asymptotes */
     void yAndAsymptoteAnalysis();
 
-    /* Replaces any negative segments of the spline with straight lines with
-    ordinate 0 */
-    void removeNegativeSegments();
-
     /* After changing the polynomials and/or the knots of the spline, updates
     the affected variables */
     void updateVariables();
@@ -310,54 +302,9 @@ void Spline::solve(const vector<double>& Abscissae,
 
     this->yAndAsymptoteAnalysis();
 
-    if (!possibleNegativeOrdinates){
-        this->removeNegativeSegments();
-    }
-
     this->findMaximaBetweenExtremes();
 
 }
-
-
-
-void Spline::removeAsymptotes() {
-
-    // If the spline is completely flat, doesn't remove any segment
-    if (numberOfAsymptotePolynomialsLeft == numberOfPolynomials)
-        return;
-
-    // If there are no horizontal asymptotes, doesn't remove any segment
-    if (numberOfAsymptotePolynomialsLeft+numberOfAsymptotePolynomialsRight == 0)
-        return;
-
-    // If there are horizontal asymptotes, selects the new knots and the new
-    // coefficients of the spline
-
-    vector<double> newKnots;
-    vector<vector<double>> newCoeffD0;
-    vector<vector<double>> newCoeffD1;
-    vector<vector<double>> newCoeffD2;
-
-    for (int a=numberOfAsymptotePolynomialsLeft;
-         a<numberOfPolynomials-numberOfAsymptotePolynomialsRight; ++a) {
-        newKnots.push_back(knots[a]);
-        newCoeffD0.push_back(coeffD0[a]);
-        newCoeffD1.push_back(coeffD1[a]);
-        newCoeffD2.push_back(coeffD2[a]);
-    }
-    newKnots.push_back(
-        knots[numberOfPolynomials-numberOfAsymptotePolynomialsRight]);
-
-    knots = newKnots;
-    coeffD0 = newCoeffD0;
-    coeffD1 = newCoeffD1;
-    coeffD2 = newCoeffD2;
-
-    this->updateVariables();
-
-}
-
-
 
 double Spline::D0(double x) {
 
@@ -1547,72 +1494,6 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
     return roots;
 
 }
-
-
-
-void Spline::removeNegativeSegments() {
-
-    // Calculates the real different roots of the spline
-    vector<double> roots = calculateRoots(0);
-
-    if (roots.size() == 0){
-        return;
-    }
-
-    // If required, adds new knots, corresponding to the roots, to the spline,
-    // and adds the corresponding polynomials to the polynomials of the spline
-    int i=knots.size()-1;
-    int j=0;
-    for (int a=0; a<i; ++a){
-        for (int b=j; b<(int)roots.size(); ++b){
-            if (roots[b] > knots[a] && roots[b] < knots[a+1]) {
-                ++a;
-                ++i;
-                ++j;
-                knots.insert(knots.begin()+a,roots[b]);
-                coeffD0.insert(coeffD0.begin()+a,coeffD0[a-1]);
-                coeffD1.insert(coeffD1.begin()+a,coeffD1[a-1]);
-                coeffD2.insert(coeffD2.begin()+a,coeffD2[a-1]);
-            }
-        }
-    }
-
-    // Updates the values of numberOfKnots, numberOfPolynomials, K and G
-    numberOfKnots = knots.size();
-
-    // Replaces any negative segments of the spline with straight lines with
-    // ordinate 0
-    auto segment = vector<double>(m,0);
-    for (int a=0; a<(int)knots.size()-1; ++a) {
-        double midpoint = (knots[a]+knots[a+1])/2.;
-        if (this->D0(midpoint) <= 0) {
-            coeffD0[a] = segment;
-            coeffD1[a] = segment;
-            coeffD2[a] = segment;
-        }
-    }
-
-    // Replaces any two consecutive segments with the same polynomial with a
-    // single segment with that polynomial
-    int k=knots.size();
-    for (int a=1; a<k; ++a){
-        if (coeffD0[a] == coeffD0[a-1]) {
-            knots.erase(knots.begin()+a);
-            coeffD0.erase(coeffD0.begin()+a);
-            coeffD1.erase(coeffD1.begin()+a);
-            coeffD2.erase(coeffD2.begin()+a);
-            --a;
-            --k;
-        }
-    }
-
-
-    this->updateVariables();
-
-
-}
-
-
 
 void Spline::updateVariables() {
 

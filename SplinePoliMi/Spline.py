@@ -23,7 +23,7 @@ class Spline:
     @staticmethod
     def compileBinaries(module_path, compiler='g++'):
         print('Compiling binaries...')
-        flags_compiler = '-std=c++17 -shared -fPIC -O3 -Wall -DNDEBUG'
+        flags_compiler = '-std=c++17 -shared -fPIC'
         input_main = os.path.join(module_path, 'main.cpp')
         output_exec = os.path.join(module_path, Spline.binariesFileName)
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
@@ -80,7 +80,7 @@ class Spline:
                  m: int = 4, g: int = 3, lambdaSearchInterval: int = 6, numberOfStepsLambda: int = 13,
                  numberOfRatiolkForAICcUse: int = 40, fractionOfOrdinateRangeForAsymptoteIdentification: float = 0.005,
                  fractionOfOrdinateRangeForMaximumIdentification: float = 0.025,
-                 possibleNegativeOrdinates: bool = False, removeAsymptotes: bool = True, graphPoints: int = 500,
+                 possibleNegativeOrdinates: bool = False, removeAsymptotes: bool = False, graphPoints: int = 500,
                  criterion: str = 'AIC'
                  ):
         """
@@ -296,3 +296,8 @@ class Spline:
         else:
             raise ValueError('Derivative does not exists!')
         return self.compute(x, k, coeff) if not hasattr(x, '__iter__') else [self.compute(e, k, coeff) for e in x]
+
+        def removeAsymptotes(self):
+            pass
+        def removeNegativeSegments(self):
+            pass
