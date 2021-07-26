@@ -8,8 +8,8 @@ using namespace std;
 
 #include "Settings.h"
 #include "BasisFunction.h"
-#include "Spline.h"
 #include "Utilities.h"
+#include "Spline.h"
 #include "ComputeSpline.h"
 
 /*
@@ -33,14 +33,13 @@ using namespace std;
     x and y have to be sorted and without duplicates on the x-axis.
 */
 extern "C"
-void compute_spline_cpp(double* x, double* y, int length, int splineType,
+int compute_spline_cpp(double* x, double* y, int length, int splineType,
             int* numberOfKnots, int* numberOfPolynomials,
             double* coeffDO, double* coeffD1, double* coeffD2, double* knots,
             bool verbose,
             int m_, int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
             double fractionOfOrdinateRangeForAsymptoteIdentification_, double fractionOfOrdinateRangeForMaximumIdentification_,
             bool possibleNegativeOrdinates_, bool removeAsymptotes_, int graphPoints_, char* criterion_){
-
 
     // ----------  SET VARIABLE  ----------
 
@@ -132,8 +131,8 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     *numberOfKnots = best_spline.numberOfKnots;
     *numberOfPolynomials = best_spline.numberOfPolynomials;
 
-    for(int i = 0; i < best_spline.coeffD0.size(); i++){
-        for(int j = 0; j < best_spline.coeffD0[i].size(); j++){
+    for(int i = 0; i < (int)best_spline.coeffD0.size(); i++){
+        for(int j = 0; j < (int)best_spline.coeffD0[i].size(); j++){
             coeffDO[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD0[i][j];
             coeffD1[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD1[i][j];
             coeffD2[i * best_spline.coeffD0[i].size() + j] = best_spline.coeffD2[i][j];
@@ -147,7 +146,7 @@ void compute_spline_cpp(double* x, double* y, int length, int splineType,
     possibleSplines.clear();
     possibleSplines.shrink_to_fit();
 
-    return;
+    return 0;
 }
 
 int main() {

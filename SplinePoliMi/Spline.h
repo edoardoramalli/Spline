@@ -310,7 +310,7 @@ void Spline::solve(const vector<double>& Abscissae,
 
     this->yAndAsymptoteAnalysis();
 
-    if (possibleNegativeOrdinates == false){
+    if (!possibleNegativeOrdinates){
         this->removeNegativeSegments();
     }
 
@@ -731,7 +731,7 @@ void Spline::chooseKnots(int numberOfAbscissaeSeparatingConsecutiveKnots) {
             double abscissaeLength = (abscissae.back()-abscissae[0]);
             int minPointsToAdd = 30-abscissae.size();
 
-            for (int a=1; a<abscissae.size(); ++a) {
+            for (int a=1; a<(int)abscissae.size(); ++a) {
                 double segmentLength = (abscissae[a]-abscissae[a-1]);
                 int numberOfPointstoAdd =
                     segmentLength/abscissaeLength*(double)(minPointsToAdd+1);
@@ -751,7 +751,7 @@ void Spline::chooseKnots(int numberOfAbscissaeSeparatingConsecutiveKnots) {
         // Adds extra points between consecutive data points with a distance on
         // the x-axis greater than 3.*meanKnotDistance
         if (abscissae.size() >= 30)
-            for (int a=1; a<abscissae.size(); ++a) {
+            for (int a=1; a<(int)abscissae.size(); ++a) {
                 double segmentLength = (abscissae[a]-abscissae[a-1]);
                 if (segmentLength > 3.*meanKnotDistance) {
                     int numberOfNewPoints =
@@ -796,7 +796,7 @@ void Spline::chooseKnots(int numberOfAbscissaeSeparatingConsecutiveKnots) {
         double y = ordinates[0];
         int k = 0;
 		int l = 0;
-        for (int a=1; a<abscissae.size()-1; ++a) {
+        for (int a=1; a<(int)abscissae.size()-1; ++a) {
             ++k;
             double difference = abscissae[a] - abscissae[a-1];
             if (k > number ||
@@ -1167,7 +1167,7 @@ void Spline::yAndAsymptoteAnalysis() {
     vector<double> pointsD0;
 
     if (rootsD0.size() > 0)
-        for (int a=0; a<rootsD0.size(); ++a)
+        for (int a=0; a<(int)rootsD0.size(); ++a)
             pointsD0.push_back(this->D0(rootsD0[a]));
     for (int a=0; a<numberOfKnots; ++a)
         pointsD0.push_back(this->D0(knots[a]));
@@ -1175,7 +1175,7 @@ void Spline::yAndAsymptoteAnalysis() {
     vector<double> pointsD0Original;
 
     if (rootsD0.size() > 0)
-        for (int a=0; a<rootsD0.size(); ++a)
+        for (int a=0; a<(int)rootsD0.size(); ++a)
             if (rootsD0[a] >= originalAbscissae[0])
                 if (rootsD0[a] <= originalAbscissae.back())
                     pointsD0Original.push_back(this->D0(rootsD0[a]));
@@ -1186,25 +1186,25 @@ void Spline::yAndAsymptoteAnalysis() {
 
     // Calculates yD0Max
     yD0Max = pointsD0[0];
-    for (int a=1; a<pointsD0.size(); ++a)
+    for (int a=1; a<(int)pointsD0.size(); ++a)
         if (pointsD0[a] > yD0Max)
             yD0Max = pointsD0[a];
 
     // Calculates yD0Min
     yD0Min = pointsD0[0];
-    for (int a=1; a<pointsD0.size(); ++a)
+    for (int a=1; a<(int)pointsD0.size(); ++a)
         if (pointsD0[a] < yD0Min)
             yD0Min = pointsD0[a];
 
     // Calculates yD0MaxOriginal
     yD0MaxOriginal = pointsD0Original[0];
-    for (int a=1; a<pointsD0Original.size(); ++a)
+    for (int a=1; a<(int)pointsD0Original.size(); ++a)
         if (pointsD0Original[a] > yD0MaxOriginal)
             yD0MaxOriginal = pointsD0Original[a];
 
     // Calculates yD0MinOriginal
     yD0MinOriginal = pointsD0Original[0];
-    for (int a=1; a<pointsD0Original.size(); ++a)
+    for (int a=1; a<(int)pointsD0Original.size(); ++a)
         if (pointsD0Original[a] < yD0MinOriginal)
             yD0MinOriginal = pointsD0Original[a];
 
@@ -1216,7 +1216,7 @@ void Spline::yAndAsymptoteAnalysis() {
     vector<double> pointsD1;
 
     if (rootsD1.size() > 0)
-        for (int a=0; a<rootsD1.size(); ++a)
+        for (int a=0; a<(int)rootsD1.size(); ++a)
             pointsD1.push_back(this->D1(rootsD1[a]));
     for (int a=0; a<numberOfKnots; ++a)
         pointsD1.push_back(this->D1(knots[a]));
@@ -1224,7 +1224,7 @@ void Spline::yAndAsymptoteAnalysis() {
     vector<double> pointsD1Original;
 
     if (rootsD1.size() > 0)
-        for (int a=0; a<rootsD1.size(); ++a)
+        for (int a=0; a<(int)rootsD1.size(); ++a)
             if (rootsD1[a] >= originalAbscissae[0])
                 if (rootsD1[a] <= originalAbscissae.back())
                     pointsD1Original.push_back(this->D1(rootsD1[a]));
@@ -1235,25 +1235,25 @@ void Spline::yAndAsymptoteAnalysis() {
 
     // Calculates yD1Max
     yD1Max = pointsD1[0];
-    for (int a=1; a<pointsD1.size(); ++a)
+    for (int a=1; a<(int)pointsD1.size(); ++a)
         if (pointsD1[a] > yD1Max)
             yD1Max = pointsD1[a];
 
     // Calculates yD1Min
     yD1Min = pointsD1[0];
-    for (int a=1; a<pointsD1.size(); ++a)
+    for (int a=1; a<(int)pointsD1.size(); ++a)
         if (pointsD1[a] < yD1Min)
             yD1Min = pointsD1[a];
 
     // Calculates yD1MaxOriginal
     yD1MaxOriginal = pointsD1Original[0];
-    for (int a=1; a<pointsD1Original.size(); ++a)
+    for (int a=1; a<(int)pointsD1Original.size(); ++a)
         if (pointsD1Original[a] > yD1MaxOriginal)
             yD1MaxOriginal = pointsD1Original[a];
 
     // Calculates yD1MinOriginal
     yD1MinOriginal = pointsD1Original[0];
-    for (int a=1; a<pointsD1Original.size(); ++a)
+    for (int a=1; a<(int)pointsD1Original.size(); ++a)
         if (pointsD1Original[a] < yD1MinOriginal)
             yD1MinOriginal = pointsD1Original[a];
 
@@ -1451,7 +1451,7 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
                 if (x3 >= knots[i] && x3 <= knots[i+1]) solutions.push_back(x3);
                 if (solutions.size() > 0) {
                     sort(solutions.begin(),solutions.end());
-                    for (int j=0; j<solutions.size(); ++j)
+                    for (int j=0; j<(int)solutions.size(); ++j)
                         if (roots.size() == 0)
                             roots.push_back(solutions[j]);
                         else
@@ -1529,7 +1529,7 @@ vector<double> Spline::calculateRoots(double derivativeOrder) {
                         solutions.push_back(x2);
                     if (solutions.size() > 0) {
                         sort(solutions.begin(),solutions.end());
-                        for (int j=0; j<solutions.size(); ++j)
+                        for (int j=0; j<(int)solutions.size(); ++j)
                             if (roots.size() == 0)
                                 roots.push_back(solutions[j]);
                             else
@@ -1555,14 +1555,16 @@ void Spline::removeNegativeSegments() {
     // Calculates the real different roots of the spline
     vector<double> roots = calculateRoots(0);
 
-    if (roots.size() == 0) return;
+    if (roots.size() == 0){
+        return;
+    }
 
     // If required, adds new knots, corresponding to the roots, to the spline,
     // and adds the corresponding polynomials to the polynomials of the spline
     int i=knots.size()-1;
     int j=0;
-    for (int a=0; a<i; ++a)
-        for (int b=j; b<roots.size(); ++b)
+    for (int a=0; a<i; ++a){
+        for (int b=j; b<(int)roots.size(); ++b){
             if (roots[b] > knots[a] && roots[b] < knots[a+1]) {
                 ++a;
                 ++i;
@@ -1572,6 +1574,8 @@ void Spline::removeNegativeSegments() {
                 coeffD1.insert(coeffD1.begin()+a,coeffD1[a-1]);
                 coeffD2.insert(coeffD2.begin()+a,coeffD2[a-1]);
             }
+        }
+    }
 
     // Updates the values of numberOfKnots, numberOfPolynomials, K and G
     numberOfKnots = knots.size();
@@ -1579,7 +1583,7 @@ void Spline::removeNegativeSegments() {
     // Replaces any negative segments of the spline with straight lines with
     // ordinate 0
     auto segment = vector<double>(m,0);
-    for (int a=0; a<knots.size()-1; ++a) {
+    for (int a=0; a<(int)knots.size()-1; ++a) {
         double midpoint = (knots[a]+knots[a+1])/2.;
         if (this->D0(midpoint) <= 0) {
             coeffD0[a] = segment;
@@ -1591,7 +1595,7 @@ void Spline::removeNegativeSegments() {
     // Replaces any two consecutive segments with the same polynomial with a
     // single segment with that polynomial
     int k=knots.size();
-    for (int a=1; a<k; ++a)
+    for (int a=1; a<k; ++a){
         if (coeffD0[a] == coeffD0[a-1]) {
             knots.erase(knots.begin()+a);
             coeffD0.erase(coeffD0.begin()+a);
@@ -1600,8 +1604,11 @@ void Spline::removeNegativeSegments() {
             --a;
             --k;
         }
+    }
+
 
     this->updateVariables();
+
 
 }
 
@@ -1636,7 +1643,7 @@ void Spline::findMaximaBetweenExtremes() {
 
     vector<double> rootsD1;
 
-    for (int a=0; a<allRootsD1.size(); ++a)
+    for (int a=0; a<(int)allRootsD1.size(); ++a)
         if (allRootsD1[a] != knots[0] && allRootsD1[a] != knots.back()) {
             if (rootsD1.size() == 0)
                 rootsD1.push_back(allRootsD1[a]);
@@ -1648,7 +1655,7 @@ void Spline::findMaximaBetweenExtremes() {
     vector<double> xMaxima, yMaxima, xMinima, yMinima;
 
     if (rootsD1.size() > 0)
-        for (int a=0; a<rootsD1.size(); ++a) {
+        for (int a=0; a<(int)rootsD1.size(); ++a) {
             if (this->D2(rootsD1[a]) < 0) {
                 xMaxima.push_back(rootsD1[a]);
                 yMaxima.push_back(this->D0(rootsD1[a]));
@@ -1683,12 +1690,12 @@ void Spline::findMaximaBetweenExtremes() {
     }
 
     if (xMinima.size() > 0)
-        for (int a=0; a<xMaxima.size(); ++a) {
+        for (int a=0; a<(int)xMaxima.size(); ++a) {
 
             double yMinimumLeft = yLeft;
             double yMinimumRight = yRight;
 
-            for (int b=0; b<xMinima.size(); ++b)
+            for (int b=0; b<(int)xMinima.size(); ++b)
                 if (xMinima[b] < xMaxima[a])
                     yMinimumLeft = yMinima[b];
 
@@ -1730,7 +1737,7 @@ void Spline::findMaximaBetweenExtremes() {
         else {
             int minimaBeforeFirstWellDefinedMaximum = 0;
             int numberOfMinimaWithinAsymptoteRange = 0;
-            for (int a=0; a<xMinima.size(); ++a)
+            for (int a=0; a< (int)xMinima.size(); ++a)
                 if (xMinima[a] < xMaximaWellDefined[0]) {
                     ++minimaBeforeFirstWellDefinedMaximum;
                     if (fabs(yMinima[a]-yLeft) < asymptoteRange)
@@ -1772,14 +1779,14 @@ void Spline::findMaximaBetweenExtremes() {
     vector<double> xMaximaActual;
     vector<double> yMaximaActual;
 
-    for (int a=0; a<xMaximaWellDefined.size(); ++a) {
+    for (int a=0; a< (int)xMaximaWellDefined.size(); ++a) {
 
         bool actualMaximum = true;
 
         if (a == 0 && asymptoteLeft == true)
             actualMaximum = false;
 
-        if (a == xMaximaWellDefined.size()-1 && asymptoteRight == true)
+        if (a == (int)xMaximaWellDefined.size()-1 && asymptoteRight == true)
             actualMaximum = false;
 
         if (actualMaximum == true) {

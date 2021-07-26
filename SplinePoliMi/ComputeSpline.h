@@ -1,18 +1,21 @@
 /* Generates the splines according to the splineTypes and number of points */
 vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineType) {
 
-    vector<Spline> splines;
+    vector<Spline> splines(3);
 
     vector<int> numberOfAbscissaeSeparatingConsecutiveKnots_vector = {0, 2, 5};
 
-    if (splineType == 1 || x.size() < 3)  // if model or len(x) < 3 --> just one spline
-        splines = vector<Spline>(1);
-    else if (x.size() < 5)
-        splines = vector<Spline>(2);
-    else
-        splines = vector<Spline>(3);
+    if (splineType == 1 || x.size() < 3){  // if model or len(x) < 3 --> just one spline
+        splines.resize(1);
+    }
+    else if (x.size() < 5){
+        splines.resize(2);
+    }
+    else{
+        splines.resize(3);
+    }
 
-    for (int i = 0; i < splines.size(); i++) {
+    for (int i = 0; i < (int)splines.size(); i++) {
         splines[i].solve(x, y, splineType, numberOfAbscissaeSeparatingConsecutiveKnots_vector[i]);
         if (removeAsymptotes == true){
             splines[i].removeAsymptotes();
@@ -29,7 +32,7 @@ vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineTy
 
 double summedSquaredError(vector <double> b, vector<double> c){
     double SSE = 0;
-    for(int i=0; i < b.size(); i++){
+    for(int i=0; i < (int)b.size(); i++){
         SSE += pow((b[i] - c[i]), 2);
     }
     return SSE;
@@ -39,7 +42,7 @@ vector<double> logLikeliHood(double n, vector<double> residuals){
 
     vector<double> ll;
 
-    for(int i=0; i < residuals.size(); i++)
+    for(int i=0; i < (int)residuals.size(); i++)
         ll.push_back(n * log(residuals[i] / n));
 
     return ll;
@@ -55,16 +58,16 @@ vector<vector<double>> informationCriterion(vector<double> ll, int n, vector<int
     vector<double> BIC;
     vector<double> k;
 
-    for(int i=0;i<numOfParam.size();i++)
+    for(int i=0; i < (int)numOfParam.size();i++)
         k.push_back(2*(numOfParam[i]+1)+1);
 
-    for(int i=0; i<ll.size();i++){
+    for(int i=0; i < (int)ll.size();i++){
 
         AIC.push_back(2*k[i]+ll[i]);
         correctionAIC.push_back(2*k[i]*(k[i]+1)/(n-k[i]-1));
         BIC.push_back(ll[i]+k[i]*log(n));
     }
-    for (int i = 0; i<correctionAIC.size(); i++)
+    for (int i = 0; i < (int)correctionAIC.size(); i++)
         AICc.push_back(AIC[i]+correctionAIC[i]);
 
     information.push_back(AIC);
@@ -104,7 +107,7 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
 
     int indexBestSpline;
 
-    for (int k=0; k < splines.size(); k++){
+    for (int k=0; k < (int)splines.size(); k++){
         vector<double> ySpl_tmp;
         for (int i=0; i < numOfObs;i++){
             ySpl_tmp.push_back(splines[k].D0(splines[0].originalAbscissae[i]));
@@ -114,7 +117,7 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
 
     ll = logLikeliHood(numOfObs,SSE);
 
-    for(int i=0;i<splines.size();i++){
+    for(int i=0; i< (int)splines.size(); i++){
         numOfParam.push_back(splines[i].K);
     }
 
@@ -131,10 +134,10 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
     }
 
     if (criterion == "AIC"){
-        for (int i=0; i<k.size();i++){
+        for (int i=0; i < (int)k.size();i++){
             ratioLK.push_back(k[i] / numOfObs);
         }
-        for (int i=0; i < ratioLK.size(); i++){
+        for (int i=0; i < (int)ratioLK.size(); i++){
             if (ratioLK[i] <= numberOfRatiolkForAICcUse){
                 AICplusAICc.push_back(AICc[i]);
             }
@@ -151,4 +154,45 @@ int calculateBestSpline(vector<Spline> splines, string criterion){
     }
 
     return indexBestSpline;
+}
+
+vector<vector<double>> evaluateSpline (Spline best_spline, int der) {
+
+    auto x_eval = vector<double>(graphPoints);
+    auto y_eval = vector<double>(graphPoints);
+    vector<vector<double>> spline_evaluate;
+
+
+    double (Spline::*evaluate_function)(double);
+
+    if (der == 0){
+        evaluate_function = &Spline::D0;
+    }
+    else if (der == 1){
+        evaluate_function = &Spline::D1;
+    }
+    else if (der == 2){
+        evaluate_function = &Spline::D2;
+    }
+
+    double distance = (best_spline.knots.back()-best_spline.knots[0]) / (double)(graphPoints);
+
+    for (int b=0; b<graphPoints; ++b){
+        x_eval[b] = best_spline.knots[0]+(double)b*distance;
+    }
+
+    x_eval.back() = best_spline.knots.back();
+
+    // Calculates the ordinates
+
+    for (int b=0; b<graphPoints; ++b){
+        y_eval[b] = (best_spline.*evaluate_function)(x_eval[b]);
+    }
+
+
+    spline_evaluate.push_back(x_eval);
+    spline_evaluate.push_back(y_eval);
+
+    return spline_evaluate;
+
 }

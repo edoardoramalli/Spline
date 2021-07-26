@@ -6,13 +6,16 @@ from setuptools.command.install import install
 import subprocess
 import sys
 
+version = "0.0.0.8"
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
 def custom_command():
     subprocess.check_call(
-        'g++ -std=c++17  ./SplinePoliMi/Main.cpp -o ./SplinePoliMi/SplineGenerator.o -O3 -Wall -DNDEBUG', shell=True)
+        f'g++ -std=c++17  ./SplinePoliMi/Main.cpp -o ./SplinePoliMi/SplineGenerator_{version}.o -O3 -Wall -DNDEBUG',
+        shell=True)
 
 
 class CustomInstallCommand(install):
@@ -43,7 +46,7 @@ def copy_dir():
 
 setup(
     name="SplinePoliMi",
-    version="0.0.0.8",
+    version=version,
     author="Edoardo Ramalli, Timoteo Dinelli",
     author_email="edoardo.ramalli@polimi.it",
     description="Spline generation",

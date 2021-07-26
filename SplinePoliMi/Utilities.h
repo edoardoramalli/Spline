@@ -3,7 +3,7 @@
 /* Prints a vector */
 auto printV = [](const auto& vector) {
 
-    for (int i=0; i<vector.size(); ++i)
+    for (int i=0; i< (int)vector.size(); ++i)
         cout << "(" << i << ") " << vector[i] << endl;
     cout << endl;
 
@@ -12,7 +12,7 @@ auto printV = [](const auto& vector) {
 auto printV_inLine = [](const auto& vector) {
 
     cout << "[";
-    for (int i=0; i<vector.size(); ++i)
+    for (int i=0; i< (int)vector.size(); ++i)
         cout << vector[i] << ", ";
     cout << "]" << endl;
 
@@ -41,8 +41,8 @@ void printSettings(){
 /* Prints a matrix */
 auto printM = [](const auto& matrix) {
 
-    for (int i=0; i<matrix.size(); ++i) {
-        for (int j=0; j<matrix[i].size(); ++j)
+    for (int i=0; i< (int)matrix.size(); ++i) {
+        for (int j=0; j< (int)matrix[i].size(); ++j)
             cout << "(" << i << "," << j << ") " << matrix[i][j] << "\t    ";
         cout << endl;
     }
@@ -55,8 +55,8 @@ auto printM = [](const auto& matrix) {
 /* Prints the matrix equal to the difference of the two input matrices */
 void print(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 
-    for (int i = 0; i<A.size(); ++i) {
-        for (int j = 0; j<A[i].size(); ++j)
+    for (int i = 0; i< (int)A.size(); ++i) {
+        for (int j = 0; j< (int)A[i].size(); ++j)
             cout << "(" << i << "," << j << ") " << A[i][j]-B[i][j] << "\t    ";
         cout << endl;
     }
@@ -69,7 +69,7 @@ void print(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 /* Prints the vector equal to the difference of the two input vectors */
 void print(const vector<double>& a, const vector<double>& b) {
 
-    for (int i=0; i<a.size(); ++i)
+    for (int i=0; i< (int)a.size(); ++i)
         cout << "(" << i << ") " << a[i]-b[i] << endl;
     cout << endl;
 
@@ -82,9 +82,9 @@ void printGCV1(const vector<double>& GCV1,
                double log10lambdaMin,
                double log10lambdaStep) {
 
-    for (int i=0; i<GCV1.size(); ++i) {
+    for (int i=0; i< (int)GCV1.size(); ++i) {
         cout << "(" << log10lambdaMin+i*log10lambdaStep << ")\t " << GCV1[i];
-        if (i != GCV1.size()-1) {
+        if (i != (int)GCV1.size()-1) {
             if (GCV1[i] > GCV1[i+1]) cout << "   \t ++";
             else if (GCV1[i] < GCV1[i+1]) cout << "   \t--";
             else cout << "   \tequal!";
@@ -106,8 +106,8 @@ void minMax(const vector<vector<double>>& matrix) {
     double max = matrix[0][0];
     int rowMax = 0;
     int columnMax = 0;
-    for (int i=0; i<matrix.size(); ++i) {
-        for (int j=0; j<matrix[i].size(); ++j) {
+    for (int i=0; i< (int)matrix.size(); ++i) {
+        for (int j=0; j< (int)matrix[i].size(); ++j) {
             if (matrix[i][j] < min) {
                 min = matrix[i][j];
                 rowMin = i;
@@ -133,8 +133,8 @@ matrices */
 void minMax(const vector<vector<double>>& A, const vector<vector<double>>& B) {
 
     auto matrix = vector<vector<double>>(A.size(),vector<double>(A[0].size()));
-    for (int i=0; i<A.size(); ++i)
-        for (int j=0; j<A[0].size(); ++j)
+    for (int i=0; i< (int)A.size(); ++i)
+        for (int j=0; j < (int)A[0].size(); ++j)
             matrix[i][j] = A[i][j] - B[i][j];
 
     double min = matrix[0][0];
@@ -143,8 +143,8 @@ void minMax(const vector<vector<double>>& A, const vector<vector<double>>& B) {
     double max = matrix[0][0];
     int rowMax = 0;
     int columnMax = 0;
-    for (int i=0; i<matrix.size(); ++i) {
-        for (int j=0; j<matrix[i].size(); ++j) {
+    for (int i=0; i < (int)matrix.size(); ++i) {
+        for (int j=0; j < (int)matrix[i].size(); ++j) {
             if (matrix[i][j] < min) {
                 min = matrix[i][j];
                 rowMin = i;
@@ -196,43 +196,3 @@ void invertWithGaussJordan(vector<vector<double>>& A,
 
 }
 
-vector<vector<double>> evaluateSpline (Spline best_spline, int der) {
-
-    auto x_eval = vector<double>(graphPoints);
-    auto y_eval = vector<double>(graphPoints);
-    vector<vector<double>> spline_evaluate;
-
-
-    double (Spline::*evaluate_function)(double);
-
-    if (der == 0){
-        evaluate_function = &Spline::D0;
-    }
-    else if (der == 1){
-        evaluate_function = &Spline::D1;
-    }
-    else if (der == 2){
-        evaluate_function = &Spline::D2;
-    }
-
-    double distance = (best_spline.knots.back()-best_spline.knots[0]) / (double)(graphPoints);
-
-    for (int b=0; b<graphPoints; ++b){
-        x_eval[b] = best_spline.knots[0]+(double)b*distance;
-    }
-
-    x_eval.back() = best_spline.knots.back();
-
-    // Calculates the ordinates
-
-    for (int b=0; b<graphPoints; ++b){
-        y_eval[b] = (best_spline.*evaluate_function)(x_eval[b]);
-    }
-
-
-    spline_evaluate.push_back(x_eval);
-    spline_evaluate.push_back(y_eval);
-
-    return spline_evaluate;
-
-}

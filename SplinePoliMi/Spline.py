@@ -5,14 +5,18 @@ import os
 import subprocess
 from statistics import mean
 from .CLibrary import CLibrary
+from copy import deepcopy
+from threading import Thread
 
+c_float_p = POINTER(c_double)
 
 def listToArray(ll):
     return (c_double * len(ll))(*ll)
 
 
 class Spline:
-    binariesFileName = 'SplineGenerator.o'
+    moduleVersion = '_0.0.0.8'
+    binariesFileName = f'SplineGenerator{moduleVersion}.o'
     criterion_list = ["AIC", "BIC", "SSE"]
     possibleSplineType = [0, 1]
 
@@ -138,7 +142,9 @@ class Spline:
         self.coeffD2 = None
 
         # Start
-        self.computeSpline()
+        p = Thread(target=self.computeSpline)
+        p.start()
+        p.join()
 
     def computeSpline(self):
         try:
@@ -149,16 +155,16 @@ class Spline:
         except OSError:
             raise OSError("Unable to load the system C library")
 
-        c_library.compute_spline_cpp.argtypes = [c_void_p,  # x
-                                                 c_void_p,  # y
+        c_library.compute_spline_cpp.argtypes = [c_float_p,  # x
+                                                 c_float_p,  # y
                                                  c_int,  # length of x, y
                                                  c_int,  # splineType
-                                                 c_void_p,  # numberOfKnots
-                                                 c_void_p,  # numberOfPolynomials
-                                                 c_void_p,  # coeffDO
-                                                 c_void_p,  # coeffD1
-                                                 c_void_p,  # coeffD2
-                                                 c_void_p,  # knots
+                                                 c_float_p,  # numberOfKnots
+                                                 c_float_p,  # numberOfPolynomials
+                                                 c_float_p,  # coeffDO
+                                                 c_float_p,  # coeffD1
+                                                 c_float_p,  # coeffD2
+                                                 c_float_p,  # knots
                                                  c_bool,  # verbose
                                                  c_int,  # m
                                                  c_int,  # g
@@ -173,6 +179,8 @@ class Spline:
                                                  c_char_p,  # criterion
                                                  ]
 
+        c_library.compute_spline_cpp.restype = c_int
+
         x_c = listToArray(self.x)
         y_c = listToArray(self.y)
         numberOfKnots_c = c_int()
@@ -181,10 +189,15 @@ class Spline:
         # +5 it is just to be tolerant to 5 new knots
         size_coeff_matrix = (len(self.x) * self.m) + 5
         size_knots = len(self.x) + 5
-        coeffD0_c = (size_coeff_matrix * c_double)()
-        coeffD1_c = (size_coeff_matrix * c_double)()
-        coeffD2_c = (size_coeff_matrix * c_double)()
-        knots_c = (size_knots * c_double)()
+
+        coeffD0_c = [0] * size_coeff_matrix
+        coeffD1_c = [0] * size_coeff_matrix
+        coeffD2_c = [0] * size_coeff_matrix
+        knots_c = [0] * size_knots
+        coeffD0_c = (size_coeff_matrix * c_double)(*coeffD0_c)
+        coeffD1_c = (size_coeff_matrix * c_double)(*coeffD1_c)
+        coeffD2_c = (size_coeff_matrix * c_double)(*coeffD2_c)
+        knots_c = (size_knots * c_double)(*knots_c)
 
         c_library.compute_spline_cpp(x_c,  # x
                                      y_c,  # y
@@ -192,10 +205,14 @@ class Spline:
                                      c_int(self.splineType),  # splineType
                                      pointer(numberOfKnots_c),  # numberOfKnots
                                      pointer(numberOfPolynomials_c),  # numberOfPolynomials
-                                     pointer(coeffD0_c),  # coeffDO
-                                     pointer(coeffD1_c),  # coeffD1
-                                     pointer(coeffD2_c),  # coeffD2
-                                     pointer(knots_c),  # knots
+                                     byref(coeffD0_c),  # coeffDO
+                                     byref(coeffD1_c),  # coeffD1
+                                     byref(coeffD2_c),  # coeffD2
+                                     byref(knots_c),  # knots
+                                     # coeffD0_c,  # coeffDO
+                                     # coeffD1_c,  # coeffD1
+                                     # coeffD2_c,  # coeffD2
+                                     # knots_c,  # knots
                                      c_bool(self.verbose),  # verbose
                                      c_int(self.m),  # m
                                      c_int(self.g),  # g
@@ -214,13 +231,23 @@ class Spline:
 
         self.numberOfKnots = numberOfKnots_c.value
         self.numberOfPolynomials = numberOfPolynomials_c.value
-        self.coeffD0 = np.reshape(np.array(coeffD0_c[0: self.m * self.numberOfPolynomials]),
+        self.coeffD0 = np.reshape(np.array(deepcopy(coeffD0_c[0: self.m * self.numberOfPolynomials])),
                                   (self.numberOfPolynomials, self.m))
-        self.coeffD1 = np.reshape(np.array(coeffD1_c[0: self.m * self.numberOfPolynomials]),
+        self.coeffD1 = np.reshape(np.array(deepcopy(coeffD1_c[0: self.m * self.numberOfPolynomials])),
                                   (self.numberOfPolynomials, self.m))
-        self.coeffD2 = np.reshape(np.array(coeffD2_c[0: self.m * self.numberOfPolynomials]),
+        self.coeffD2 = np.reshape(np.array(deepcopy(coeffD2_c[0: self.m * self.numberOfPolynomials])),
                                   (self.numberOfPolynomials, self.m))
-        self.knots = np.array(knots_c[0: self.numberOfKnots])
+        self.knots = np.array(deepcopy(knots_c[0: self.numberOfKnots]))
+
+        # Free Memory
+        del x_c
+        del y_c
+        del numberOfKnots_c
+        del numberOfPolynomials_c
+        del coeffD0_c
+        del coeffD1_c
+        del coeffD2_c
+        del knots_c
 
         del c_library
 
