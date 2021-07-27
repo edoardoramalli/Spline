@@ -33,10 +33,10 @@ class Spline:
             raise ValueError("The selected splineType doesn't exist")
         if self.criterion not in self.criterion_list:
             raise ValueError("The selected criterion doesn't exist")
-        if self.m <= 0:
-            raise ValueError("m cannot be less or equal than zero")
-        if self.g <= 0:
-            raise ValueError("g cannot be less or equal than zero")
+        if not 0 <= self.m <= 4:
+            raise ValueError("m must stay between 0 and 4 beacuse of the calculateRoots function")
+        if not 0<= self.g <= 3:
+            raise ValueError("m must stay between 0 and 3 beacuse of the calculateRoots function")
         if self.lambdaSearchInterval <= 0:
             raise ValueError("lambdaSearchInterval cannot be less or equal than zero")
         if self.numberOfStepsLambda <= 0:
@@ -90,9 +90,10 @@ class Spline:
         :param verbose: default is False. If True, ask to the c++ library to print input data, settings, coefficients
         and evaluate D0, D1, D2 in #graphPoints equidistant x-values from the first knots to the last knots
         :param splineType: default 0. 0 means experimental data, 1 means model data. TODO Explain better
-        :param m:
-        :param g:
-        :param lambdaSearchInterval:
+        :param m: Order of the basis function by default 4
+        :param g: Degree of the basis function by default 3
+        :param lambdaSearchInterval: Lambda is the smoothing parameter for the spline, lambdaSearchInterval is the Orders of magnitude 
+        of difference between the smallest and the largest possible value of the smoothing parameter lambda 
         :param numberOfStepsLambda:
         :param numberOfRatiolkForAICcUse:
         :param fractionOfOrdinateRangeForAsymptoteIdentification:
@@ -297,7 +298,57 @@ class Spline:
             raise ValueError('Derivative does not exists!')
         return self.compute(x, k, coeff) if not hasattr(x, '__iter__') else [self.compute(e, k, coeff) for e in x]
 
-        def removeAsymptotes(self):
+    def removeAsymptotes(self):
+
+        # Evaluations of polynomials left and right
+
+        self.yD0range = max(self.originalY) - min(self.originalY)
+        self.minVariation = self.yD0range * self.fractionOfOrdinateRangeForAsymptoteIdentification
+        self.numberOfAsymptotesPolynomialsLeft = 0
+        self.numberOfAsymptotesPolynomialsRight = 0
+        self.yFront = self.evaluate(knots[0],der = 0)
+        self.yBack = self.evaluate(knots[-1],der = 0)
+            
+        for i in range(1, size(len(self.knots))):
+            y = self.evaluate(knots[i], der = 0)
+            if abs(yFront-y) < minVariation:
+                numberOfAsymptotesPolynomialsLeft += i 
+            else:
+                break
+
+        for i in range(len(self.knots)-2, -1,-1):
+            y = self.evaluate(knots[i], der = 0)
+            if abs(yBack-y) < minVariation:
+                numberOfAsymptotesPolynomialsRight += i
+
+        # REMOVING THE ASYMPTOTES
+
+        # If the spline is completely flat, doesn't remove any segment
+        if (numberOfAsymptotesPolynomialsLeft == numberOfPolynomials):
             pass
-        def removeNegativeSegments(self):
+
+        # If there are no horizontal asymptotes, doesn't remove any segment
+        if (numberOfAsymptotesPolynomialsLeft+numberOfAsymptotesPolynomialsRight == 0):
             pass
+        
+        newKnots = np.empty()
+        newCoeffD0 = np.empty()
+        newCoeffD1 = np.empty()
+        newCoeffD2 = np.empty()
+
+        for i in range(numberOfAsymptotesPolynomialsLeft,numberOfPolynomials - numberOfAsymptotesPolynomialsRight):
+
+            newKnots.append(self.knots[i])
+            newCoeffD0.append(self.coeffD0[i])
+            newCoeffD1.append(self.coeffD1[i])
+            newCoeffD2.append(self.coeffD2[i])
+
+        newKnots.append(knots[numberOfPolynomials - numberOfAsymptotesPolynomialsRight])
+
+        self.knots = newKnots
+        self.coeffD0 = newCoeffD0
+        self.coeffD1 = newCoeffD1
+        self.coeffD2 = newCoeffD2
+
+    def removeNegativeSegments(self):
+        pass
