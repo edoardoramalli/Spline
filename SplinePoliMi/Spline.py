@@ -15,7 +15,7 @@ def listToArray(ll):
 
 
 class Spline:
-    moduleVersion = '_0.0.0.9'
+    moduleVersion = '_0.0.0.10'
     binariesFileName = f'SplineGenerator{moduleVersion}.o'
     criterion_list = ["AIC", "BIC", "SSE"]
     possibleSplineType = [0, 1]
@@ -23,7 +23,7 @@ class Spline:
     @staticmethod
     def compileBinaries(module_path, compiler='g++'):
         print('Compiling binaries...')
-        flags_compiler = '-std=c++17 -shared -fPIC'
+        flags_compiler = '-std=c++17 -shared -fPIC -O3 -Wall -DNDEBUG'
         input_main = os.path.join(module_path, 'main.cpp')
         output_exec = os.path.join(module_path, Spline.binariesFileName)
         subprocess.check_call(f'{compiler} {flags_compiler} {input_main} -o {output_exec}', shell=True)
@@ -33,10 +33,8 @@ class Spline:
             raise ValueError("The selected splineType doesn't exist")
         if self.criterion not in self.criterion_list:
             raise ValueError("The selected criterion doesn't exist")
-        if not 0 <= self.m <= 4:
-            raise ValueError("m must stay between 0 and 4 beacuse of the calculateRoots function")
-        if not 0<= self.g <= 3:
-            raise ValueError("m must stay between 0 and 3 beacuse of the calculateRoots function")
+        if not 0 <= self._g <= 6:
+            raise ValueError("g must stay between 0 and 6")
         if self.lambdaSearchInterval <= 0:
             raise ValueError("lambdaSearchInterval cannot be less or equal than zero")
         if self.numberOfStepsLambda <= 0:
@@ -77,7 +75,7 @@ class Spline:
     def __init__(self, x: list, y: list,
                  verbose: bool = False,
                  splineType: int = 0,
-                 m: int = 4, g: int = 3, lambdaSearchInterval: int = 6, numberOfStepsLambda: int = 13,
+                 g: int = 3, lambdaSearchInterval: int = 6, numberOfStepsLambda: int = 13,
                  numberOfRatiolkForAICcUse: int = 40, fractionOfOrdinateRangeForAsymptoteIdentification: float = 0.005,
                  fractionOfOrdinateRangeForMaximumIdentification: float = 0.025,
                  possibleNegativeOrdinates: bool = False, removeAsymptotes: bool = False, graphPoints: int = 500,
@@ -90,7 +88,6 @@ class Spline:
         :param verbose: default is False. If True, ask to the c++ library to print input data, settings, coefficients
         and evaluate D0, D1, D2 in #graphPoints equidistant x-values from the first knots to the last knots
         :param splineType: default 0. 0 means experimental data, 1 means model data. TODO Explain better
-        :param m: Order of the basis function by default 4
         :param g: Degree of the basis function by default 3
         :param lambdaSearchInterval: Lambda is the smoothing parameter for the spline, lambdaSearchInterval is the Orders of magnitude 
         of difference between the smallest and the largest possible value of the smoothing parameter lambda 
@@ -118,8 +115,8 @@ class Spline:
         self.verbose = verbose
 
         # Settings
-        self.m = m
-        self.g = g
+        self._g = g
+        self._m = self._g + 1
         self.lambdaSearchInterval = lambdaSearchInterval
         self.numberOfStepsLambda = numberOfStepsLambda
         self.numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse
@@ -133,11 +130,11 @@ class Spline:
         self.checkSettings()
 
         # Backwards
-        self.numberOfPolynomials = None
-        self.knots = None
-        self.coeffD0 = None
-        self.coeffD1 = None
-        self.coeffD2 = None
+        self._numberOfPolynomials = None
+        self._knots = None
+        self._coeffD0 = None
+        self._coeffD1 = None
+        self._coeffD2 = None
 
         # Start
         self.computeSpline()
@@ -162,15 +159,12 @@ class Spline:
                                                  c_float_p,  # coeffD2
                                                  c_float_p,  # knots
                                                  c_bool,  # verbose
-                                                 c_int,  # m
                                                  c_int,  # g
                                                  c_int,  # lambdaSearchInterval
                                                  c_int,  # numberOfStepsLambda
                                                  c_int,  # numberOfRatiolkForAICcUse
                                                  c_double,  # fractionOfOrdinateRangeForAsymptoteIdentification
                                                  c_double,  # fractionOfOrdinateRangeForMaximumIdentification
-                                                 # c_bool,  # possibleNegativeOrdinates
-                                                 # c_bool,  # removeAsymptotes
                                                  c_int,  # graphPoints
                                                  c_char_p,  # criterion
                                                  ]
@@ -183,17 +177,13 @@ class Spline:
         numberOfKnots_c = c_int()
         numberOfPolynomials_c = c_int()
 
-        size_coeff_matrix = (len(self.x) * self.m)
+        size_coeff_matrix = (len(self.x) * self._m)
         size_knots = len(self.x)
 
-        coeffD0_c = [0] * size_coeff_matrix
-        coeffD1_c = [0] * size_coeff_matrix
-        coeffD2_c = [0] * size_coeff_matrix
-        knots_c = [0] * size_knots
-        coeffD0_c = (size_coeff_matrix * c_double)(*coeffD0_c)
-        coeffD1_c = (size_coeff_matrix * c_double)(*coeffD1_c)
-        coeffD2_c = (size_coeff_matrix * c_double)(*coeffD2_c)
-        knots_c = (size_knots * c_double)(*knots_c)
+        coeffD0_c = (size_coeff_matrix * c_double)()
+        coeffD1_c = (size_coeff_matrix * c_double)()
+        coeffD2_c = (size_coeff_matrix * c_double)()
+        knots_c = (size_knots * c_double)()
 
         c_library.compute_spline_cpp(x_c,  # x
                                      y_c,  # y
@@ -201,38 +191,29 @@ class Spline:
                                      c_int(self.splineType),  # splineType
                                      pointer(numberOfKnots_c),  # numberOfKnots
                                      pointer(numberOfPolynomials_c),  # numberOfPolynomials
-                                     byref(coeffD0_c),  # coeffDO
-                                     byref(coeffD1_c),  # coeffD1
-                                     byref(coeffD2_c),  # coeffD2
-                                     byref(knots_c),  # knots
-                                     # coeffD0_c,  # coeffDO
-                                     # coeffD1_c,  # coeffD1
-                                     # coeffD2_c,  # coeffD2
-                                     # knots_c,  # knots
+                                     pointer(coeffD0_c),  # coeffDO
+                                     pointer(coeffD1_c),  # coeffD1
+                                     pointer(coeffD2_c),  # coeffD2
+                                     pointer(knots_c),  # knots
                                      c_bool(self.verbose),  # verbose
-                                     c_int(self.m),  # m
-                                     c_int(self.g),  # g
+                                     c_int(self._g),  # g
                                      c_int(self.lambdaSearchInterval),  # lambdaSearchInterval
                                      c_int(self.numberOfStepsLambda),  # numberOfStepsLambda
                                      c_int(self.numberOfRatiolkForAICcUse),  # numberOfRatiolkForAICcUse
                                      c_double(self.fractionOfOrdinateRangeForAsymptoteIdentification),
-                                     # fractionOfOrdinateRangeForAsymptoteIdentification
                                      c_double(self.fractionOfOrdinateRangeForMaximumIdentification),
-                                     # fractionOfOrdinateRangeForMaximumIdentification
-                                     # c_bool(self.possibleNegativeOrdinates),  # possibleNegativeOrdinates
-                                     # c_bool(self.removeAsymptotes),  # removeAsymptotes
                                      c_int(self.graphPoints),  # graphPoints
                                      c_char_p(self.criterion.encode('utf-8')),  # criterion
                                      )
 
-        self.numberOfPolynomials = numberOfPolynomials_c.value
-        self.coeffD0 = np.reshape(np.array(deepcopy(coeffD0_c[0: self.m * self.numberOfPolynomials])),
-                                  (self.numberOfPolynomials, self.m))
-        self.coeffD1 = np.reshape(np.array(deepcopy(coeffD1_c[0: self.m * self.numberOfPolynomials])),
-                                  (self.numberOfPolynomials, self.m))
-        self.coeffD2 = np.reshape(np.array(deepcopy(coeffD2_c[0: self.m * self.numberOfPolynomials])),
-                                  (self.numberOfPolynomials, self.m))
-        self.knots = np.array(deepcopy(knots_c[0: numberOfKnots_c.value]))
+        self._numberOfPolynomials = numberOfPolynomials_c.value
+        self._coeffD0 = np.reshape(np.array(deepcopy(coeffD0_c[0: self._m * self._numberOfPolynomials])),
+                                  (self._numberOfPolynomials, self._m))
+        self._coeffD1 = np.reshape(np.array(deepcopy(coeffD1_c[0: self._m * self._numberOfPolynomials])),
+                                  (self._numberOfPolynomials, self._m))
+        self._coeffD2 = np.reshape(np.array(deepcopy(coeffD2_c[0: self._m * self._numberOfPolynomials])),
+                                  (self._numberOfPolynomials, self._m))
+        self._knots = np.array(deepcopy(knots_c[0: numberOfKnots_c.value]))
 
         # Free Memory
         del x_c
@@ -250,8 +231,8 @@ class Spline:
         # TODO ctyhon immplementation?
         indexOfPolynomial = 0
 
-        for i in range(0, len(self.knots) - 1):
-            if x > self.knots[i]:
+        for i in range(0, len(self._knots) - 1):
+            if x > self._knots[i]:
                 indexOfPolynomial = i
             else:
                 break
@@ -274,107 +255,120 @@ class Spline:
         :param der: default 0. 0 means D0, 1 means D1 (first derivative), 2 means D2 (second derivative)
         :return: the evaluated derivative on the x-value(s) x
         """
-        if not any([len(self.knots), self.m, self.coeffD0, self.coeffD1, self.coeffD2]):
+        if not any([len(self._knots), self._m, self._coeffD0, self._coeffD1, self._coeffD2]):
             raise ValueError('Spline is not computed yet!')
         # numpy.float64 etc..?
         # if not any([(lambda element: type(element) == float or type(element) == int)(e) for e in x]):
         #     raise ValueError('Value of x is not valid!')
         if der == 0:
-            k = self.m
-            coeff = self.coeffD0
+            k = self._m
+            coeff = self._coeffD0
         elif der == 1:
-            k = self.g
-            coeff = self.coeffD1
+            k = self._g
+            coeff = self._coeffD1
         elif der == 2:
-            k = self.g - 1
-            coeff = self.coeffD2
+            k = self._g - 1
+            coeff = self._coeffD2
         else:
             raise ValueError('Derivative does not exists!')
         return self.compute(x, k, coeff) if not hasattr(x, '__iter__') else [self.compute(e, k, coeff) for e in x]
 
     def removeAsymptotes(self):
 
+        return
+
+        # TODO serve davvero?
+
         # Evaluations of polynomials left and right
 
-        self.yD0range = max(self.originalY) - min(self.originalY)
-        self.minVariation = self.yD0range * self.fractionOfOrdinateRangeForAsymptoteIdentification
-        self.numberOfAsymptotesPolynomialsLeft = 0
-        self.numberOfAsymptotesPolynomialsRight = 0
-        self.yFront = self.evaluate(knots[0],der = 0)
-        self.yBack = self.evaluate(knots[-1],der = 0)
-            
-        for i in range(1, size(len(self.knots))):
-            y = self.evaluate(knots[i], der = 0)
-            if abs(yFront-y) < minVariation:
-                numberOfAsymptotesPolynomialsLeft += i 
+        x_range = np.linspace(min(self.originalX), max(self.originalX), 100)
+        y_eval = self.evaluate(x_range, der=0)
+
+        self.yD0range = max(y_eval) - min(y_eval)
+        minVariation = self.yD0range * self.fractionOfOrdinateRangeForAsymptoteIdentification
+        numberAsymptotesPolynomialsLeft = 0
+        numberAsymptotesPolynomialsRight = 0
+        yFront = self.evaluate(self.knots[0], der=0)
+        yBack = self.evaluate(self.knots[-1], der=0)
+
+        for i in range(1, len(self.knots)):
+            y = self.evaluate(self.knots[i], der=0)
+            if abs(yFront - y) < minVariation:
+                numberAsymptotesPolynomialsLeft += 1
             else:
                 break
 
-        for i in range(len(self.knots)-2, -1,-1):
-            y = self.evaluate(knots[i], der = 0)
-            if abs(yBack-y) < minVariation:
-                numberOfAsymptotesPolynomialsRight += i
+        for i in range(len(self.knots) - 2, 0, -1):
+            y = self.evaluate(self.knots[i], der=0)
+            if abs(yBack - y) < minVariation:
+                numberAsymptotesPolynomialsRight += 1
+            else:
+                break
 
         # REMOVING THE ASYMPTOTES
 
         # If the spline is completely flat, doesn't remove any segment
-        if (numberOfAsymptotesPolynomialsLeft == numberOfPolynomials):
-            pass
-
+        if numberAsymptotesPolynomialsLeft == self.numberOfPolynomials:
+            return
         # If there are no horizontal asymptotes, doesn't remove any segment
-        if (numberOfAsymptotesPolynomialsLeft+numberOfAsymptotesPolynomialsRight == 0):
-            pass
-        
-        newKnots = np.empty()
-        newCoeffD0 = np.empty()
-        newCoeffD1 = np.empty()
-        newCoeffD2 = np.empty()
+        elif numberAsymptotesPolynomialsLeft + numberAsymptotesPolynomialsRight == 0:
+            return
+        elif numberAsymptotesPolynomialsLeft < self.numberOfPolynomials - numberAsymptotesPolynomialsRight:
+            newKnots = np.array([])
+            newCoeffD0 = np.array([])
+            newCoeffD1 = np.array([])
+            newCoeffD2 = np.array([])
+            print('dooo', numberAsymptotesPolynomialsLeft, self.numberOfPolynomials, numberAsymptotesPolynomialsRight)
 
-        for i in range(numberOfAsymptotesPolynomialsLeft,numberOfPolynomials - numberOfAsymptotesPolynomialsRight):
+            for i in range(numberAsymptotesPolynomialsLeft,
+                           self.numberOfPolynomials - numberAsymptotesPolynomialsRight):
+                newKnots = np.append(newKnots, self.knots[i])
+                newCoeffD0 = np.append(newCoeffD0, self.coeffD0[i])
+                newCoeffD1 = np.append(newCoeffD1, self.coeffD1[i])
+                newCoeffD2 = np.append(newCoeffD2, self.coeffD2[i])
 
-            newKnots.append(self.knots[i])
-            newCoeffD0.append(self.coeffD0[i])
-            newCoeffD1.append(self.coeffD1[i])
-            newCoeffD2.append(self.coeffD2[i])
+            newKnots = np.append(newKnots, self.knots[self.numberOfPolynomials - numberAsymptotesPolynomialsRight])
 
-        newKnots.append(knots[numberOfPolynomials - numberOfAsymptotesPolynomialsRight])
+            self.knots = newKnots
+            self.coeffD0 = newCoeffD0
+            self.coeffD1 = newCoeffD1
+            self.coeffD2 = newCoeffD2
+            self.numberOfPolynomials = len(self.knots) - 1
 
-        self.knots = newKnots
-        self.coeffD0 = newCoeffD0
-        self.coeffD1 = newCoeffD1
-        self.coeffD2 = newCoeffD2
+            print(self.coeffD0)
 
     def removeNegativeSegments(self):
 
         roots = []
 
-        for i in range(self.numberOfPolynomials):
-            # TODO capire cosa accade se m > 3
-            a0 = self.coeffD0[i][3]
-            b0 = self.coeffD0[i][2]
-            c0 = self.coeffD0[i][1]
-            d0 = self.coeffD0[i][0]
-            roots += list(np.roots([a0, b0, c0, d0]))
+        for i in range(self._numberOfPolynomials):
+            roots_coeff = np.array([])
+            for m_val in range(self._g, -1, -1):
+                roots_coeff = np.append(roots_coeff, self._coeffD0[i][m_val])
+            roots += list(np.roots(roots_coeff))
 
         for root in roots:
             if not np.iscomplex(root):
                 index = 0
                 root = float(np.real(root))
-                for index_knots in range(len(self.knots)):
-                    if root < self.knots[index_knots]:
+                for index_knots in range(len(self._knots)):
+                    if root < self._knots[index_knots]:
                         break
                     else:
                         index += 1
-                if 1 <= index < len(self.knots):
-                    self.knots = np.insert(self.knots, index, root)
-                    self.coeffD0 = np.insert(self.coeffD0, index, self.coeffD0[index - 1], axis=0)
-                    self.coeffD1 = np.insert(self.coeffD1, index, self.coeffD1[index - 1], axis=0)
-                    self.coeffD2 = np.insert(self.coeffD2, index, self.coeffD2[index - 1], axis=0)
+                if 1 <= index < len(self._knots):
+                    self._knots = np.insert(self._knots, index, root)
+                    self._coeffD0 = np.insert(self._coeffD0, index, self._coeffD0[index - 1], axis=0)
+                    self._coeffD1 = np.insert(self._coeffD1, index, self._coeffD1[index - 1], axis=0)
+                    self._coeffD2 = np.insert(self._coeffD2, index, self._coeffD2[index - 1], axis=0)
 
-        for index_knot in range(len(self.knots) - 1):
-            midpoint = (self.knots[index_knot] + self.knots[index_knot + 1]) / 2.0
-            if self.evaluate(midpoint, der=0) <= 0:
-                zeros = np.zeros(self.m)
-                self.coeffD0[index_knot] = zeros
-                self.coeffD1[index_knot] = zeros
-                self.coeffD2[index_knot] = zeros
+        if len(roots) > 0:
+            for index_knot in range(len(self._knots) - 1):
+                midpoint = (self._knots[index_knot] + self._knots[index_knot + 1]) / 2.0
+                if self.evaluate(midpoint, der=0) <= 0:
+                    zeros = np.zeros(self._m)
+                    self._coeffD0[index_knot] = zeros
+                    self._coeffD1[index_knot] = zeros
+                    self._coeffD2[index_knot] = zeros
+
+        self._numberOfPolynomials = len(self._knots)

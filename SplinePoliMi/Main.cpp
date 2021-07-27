@@ -22,9 +22,44 @@ using namespace std;
     --> Ordinati, media, media errori, rimozione asintoti (non solo roba a 0) Riga 670 Indexes.h originale
 4. Pre-rimozione asintoti dai dati numerici --> Noi lo dobbiamo fare in python, teniamo un po di asintoto
     Ma se lo teniamo puoi Spline.removeAsymptotes() lo rimuove lo stesso?
-5. FW (Future Work): Massimi? --> parabola + solo guardando dei pointi posso sapere se è un max o è un outlier
-6. FW: Filtraggio
+
+5. FW (Future Work): Massimi? --> mettere punti su parabola + solo guardando dei pointi posso sapere se è un max o è un outlier
+6. FW: Filtraggio --> chooseKnots, scegliere i nodi in base alla densita di punti nella zona
 7. FW: Outlier detection. Calcolo spline con e senza outlier e magari utilizzo il modello
+8. FW: Plateau: se riesco a riconoscere un plateau potrei mettere piatta la spline
+
+*/
+
+
+/*
+
+1. calcutesRoots ha il problema che è limitato al 3° grado. E' stato rimosso e viene fatto in python.
+Veniva usato per removeNegativeSegments e yAndAsymptoteAnalysis. In removeNegativeSegments veniva usato per trovare
+gli zeri della spline e poi vedere se la spline è negativa. In yAndAsymptoteAnalysis per trovare gli zeri della derivata
+prima per lo studio dei massimi e minimi
+
+2. yAndAsymptoteAnalysis è stata rimossa. Il suo studio dei massimi venivano usati da normalizeCoefficients e removeAsymptotes
+che non usiamo più vedi dopo.
+
+3. normalizeCoefficients lo abbiamo rimosso perchè la normalizzazione veniva fatto ma non succedeva niente in quanto la spline
+veniva normalizzata con se stessa. Aveva senso quando si faceva tutto insieme, i.e. normalizzo spline modello rispetto a
+quella sperimentale
+
+4. removeAsymptotes è stata rimossa perchè non in realtà non rimuove gli asintoti ma solo dei nodi e rispettivi coefficienti.
+In realtà la spline può sempre essere calcolata anche in punti dove non si hanno nodi vicini. E' da fare poi in python
+un ragionamento per intersezione domini e rimozione asintoti troppo grandi
+
+5. extendSpline è stata tolta perchè serviva solo per quella del modello nel momento del curve matching per estendere il
+dominio.
+
+6. findMaximaBetweenExtremes è stata tolta perchè non veniva usato più da nessuno in questo momento.
+
+7. updateVariables. Tolta perchè aggiornava numberOfKnots, K, G etc.. ma dal momento che non aggiungiamo più nodi
+(venivano aggiunti da removeNegativeSegments per togliere parti negative, nodi messi a 0) o tolti da removeAsymptotes
+
+8. removeNegativeSegments sul mac crashava quindi l'abbiamo messo in python... Aveva il problema ereditato da calculateRoots per
+spline di grado maggiore di 3
+
 
 */
 
@@ -37,10 +72,10 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
             int* numberOfKnots, int* numberOfPolynomials,
             double* coeffDO, double* coeffD1, double* coeffD2, double* knots,
             bool verbose,
-            int m_, int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
-            double fractionOfOrdinateRangeForAsymptoteIdentification_, double fractionOfOrdinateRangeForMaximumIdentification_,
-                         int graphPoints_, char* criterion_){
-//            bool possibleNegativeOrdinates_, bool removeAsymptotes_,
+            int g_, int lambdaSearchInterval_, int numberOfStepsLambda_, int numberOfRatiolkForAICcUse_,
+            double fractionOfOrdinateRangeForAsymptoteIdentification_,
+            double fractionOfOrdinateRangeForMaximumIdentification_,
+            int graphPoints_, char* criterion_){
 
 
     // ----------  SET VARIABLE  ----------
@@ -51,15 +86,13 @@ int compute_spline_cpp(double* x, double* y, int length, int splineType,
 
     // ----------  SET SETTINGS  ----------
 
-    m = m_;
     g = g_;
+    m = g + 1;
     lambdaSearchInterval = lambdaSearchInterval_;
     numberOfStepsLambda = numberOfStepsLambda_;
     numberOfRatiolkForAICcUse = numberOfRatiolkForAICcUse_;
     fractionOfOrdinateRangeForAsymptoteIdentification = fractionOfOrdinateRangeForAsymptoteIdentification_;
     fractionOfOrdinateRangeForMaximumIdentification = fractionOfOrdinateRangeForMaximumIdentification_;
-//    possibleNegativeOrdinates = possibleNegativeOrdinates_;
-//    removeAsymptotes = removeAsymptotes_;
     graphPoints = graphPoints_;
     criterion = string(criterion_);
 

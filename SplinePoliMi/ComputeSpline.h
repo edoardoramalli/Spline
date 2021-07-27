@@ -17,13 +17,6 @@ vector<Spline> calculateSplines(vector<double> x, vector<double> y, int splineTy
 
     for (int i = 0; i < (int)splines.size(); i++) {
         splines[i].solve(x, y, splineType, numberOfAbscissaeSeparatingConsecutiveKnots_vector[i]);
-//        if (removeAsymptotes == true){
-//            splines[i].removeAsymptotes();
-//        }
-        splines[i].normalizeCoefficients(
-                                        -splines[i].yD0Min,
-                                        splines[i].yD0Max - splines[i].yD0Min,
-                                        splines[i].yD1MaxAbs);
     }
 
     return splines;

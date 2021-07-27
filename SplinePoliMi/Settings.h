@@ -5,11 +5,13 @@
 
 #ifndef SPLINE_SETTINGS_H
 #define SPLINE_SETTINGS_H
-/* Order of the basis functions */
-int m;
+
 
 /* Degree of the basis functions */
 int g;
+
+/* Order of the basis functions */
+int m;
 
 /* Orders of magnitude of difference between the smallest and the largest
 possible value of the smoothing parameter lambda */
